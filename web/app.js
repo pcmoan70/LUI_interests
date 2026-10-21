@@ -632,11 +632,11 @@ function viewGraph() {
   app.innerHTML = `<h1>Samarbeidsgraf</h1><div class="toolbar" id="bar"></div>
     <div class="legend" id="legend"></div>
     <div class="graph-wrap"><div id="cy" style="position:relative"><canvas id="gc" style="width:100%;height:100%;display:block;cursor:grab"></canvas>
-      <div class="small muted no-print" style="position:absolute;left:8px;bottom:6px">scroll = zoom · dra bakgrunn = panorer · dra node = flytt · klikk = detaljer · dobbeltklikk = nullstill</div></div>
+      <div class="small muted no-print" style="position:absolute;left:8px;bottom:6px">scroll = zoom · dra bakgrunn = panorer · dra node = flytt · klikk node = sentrer med kontakter i ringer · dobbeltklikk bakgrunn = tilbake</div></div>
       <div class="panel" id="side"><p class="muted">Klikk på en node eller kant for detaljer.</p></div></div>
     <datalist id="pnames">${D.persons.map(p => `<option value="${esc(p.name)}">`).join("")}</datalist>`;
   const st = getQS();
-  let sim = null, nodes = [], links = [], transform = d3.zoomIdentity, hover = null, selected = null, f = {}, commFilter = null;
+  let sim = null, nodes = [], links = [], transform = d3.zoomIdentity, hover = null, selected = null, f = {}, commFilter = null, fitFn = () => {};
   const canvas = $("#gc"), ctx = canvas.getContext("2d");
   const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
   const unitColor = d3.scaleOrdinal(d3.schemeTableau10).domain(D.meta.units.map(u => u.unit_id));
@@ -688,13 +688,46 @@ function viewGraph() {
 
   // interaction: zoom/pan on background, drag nodes, click for details
   const zoom = d3.zoom().scaleExtent([0.15, 8]).filter(ev => ev.type === "wheel" || (!ev.button && !nodeAt(ev.offsetX, ev.offsetY))).on("zoom", ev => { transform = ev.transform; draw(); });
-  d3.select(canvas).call(zoom).on("dblclick.zoom", () => sim?.on("end")?.());
+  d3.select(canvas).call(zoom).on("dblclick.zoom", () => { if (egoFit) resetLayout(); else sim?.on("end")?.(); });
   d3.select(canvas).call(d3.drag().container(canvas).subject(ev => nodeAt(ev.x, ev.y))
     .on("start", ev => { if (!ev.active) sim?.alphaTarget(0.25).restart(); ev.subject.fx = ev.subject.x; ev.subject.fy = ev.subject.y; canvas.style.cursor = "grabbing"; })
     .on("drag", ev => { const [x, y] = transform.invert([ev.x, ev.y]); ev.subject.fx = x; ev.subject.fy = y; })
     .on("end", ev => { if (!ev.active) sim?.alphaTarget(0); ev.subject.fx = null; ev.subject.fy = null; canvas.style.cursor = "grab"; }));
   canvas.addEventListener("mousemove", ev => { const h = nodeAt(ev.offsetX, ev.offsetY); if (h !== hover) { hover = h; canvas.title = h ? h.label : ""; draw(); } });
-  canvas.addEventListener("click", ev => { const n = nodeAt(ev.offsetX, ev.offsetY); if (n) { selected = n; showNode(n); } else { const l = linkAt(ev.offsetX, ev.offsetY); if (l) { selected = null; showLink(l); } else selected = null; } draw(); });
+  canvas.addEventListener("click", ev => { const n = nodeAt(ev.offsetX, ev.offsetY); if (n) { selected = n; showNode(n); egoLayout(n); } else { const l = linkAt(ev.offsetX, ev.offsetY); if (l) { selected = null; showLink(l); } else selected = null; } draw(); });
+  /** Centre a node and arrange its 1st/2nd/3rd-degree contacts on rings around it; farther nodes may leave the view. */
+  let egoFit = null;
+  function egoLayout(center) {
+    if (!sim) return;
+    const depth = new Map([[center.id, 0]]);
+    const adj = new Map();
+    for (const l of links) { (adj.get(l.source.id) || adj.set(l.source.id, []).get(l.source.id)).push(l.target.id); (adj.get(l.target.id) || adj.set(l.target.id, []).get(l.target.id)).push(l.source.id); }
+    const q = [center.id];
+    while (q.length) { const id = q.shift(), d = depth.get(id); if (d >= 3) continue; for (const nb of adj.get(id) || []) if (!depth.has(nb)) { depth.set(nb, d + 1); q.push(nb); } }
+    for (const n of nodes) { n.fx = null; n.fy = null; }
+    const cx = center.x, cy = center.y;
+    center.fx = cx; center.fy = cy;
+    const gap = 110 * (+f.spread || 1.5) / 1.5;
+    const radiusOf = n => { const d = depth.get(n.id); return d == null ? gap * 5 : d * gap; };
+    // let the rings dominate: weak links and repulsion while arranging, collide keeps nodes apart along each ring
+    sim.force("radial", d3.forceRadial(radiusOf, cx, cy).strength(n => depth.has(n.id) ? 1 : 0.2))
+       .force("x", null).force("y", null)
+       .force("link", d3.forceLink(links).id(n => n.id).distance(gap).strength(0.03))
+       .force("charge", d3.forceManyBody().strength(-25).distanceMax(gap * 1.2))
+       .force("collide", d3.forceCollide().radius(n => n.r + 6).iterations(3));
+    sim.alpha(1); sim.stop();
+    for (let i = 0; i < 220; i++) sim.tick();
+    egoFit = nodes.filter(n => depth.has(n.id));
+    fitFn(false, egoFit);
+    sim.alpha(0.15).restart();
+  }
+  function resetLayout() {
+    if (!sim) return;
+    for (const n of nodes) { n.fx = null; n.fy = null; }
+    egoFit = null; selected = null;
+    sim.force("radial", null);
+    apply();
+  }
   addEventListener("resize", () => { if (document.body.contains(canvas)) { size(); draw(); } });
 
   filterBar($("#bar"), [
@@ -760,9 +793,10 @@ function viewGraph() {
     selected = focus ? byId.get(focus.id) || null : null; hover = null;
     sim?.stop();
     const deg = new Map(); for (const l of links) { deg.set(l.source.id, (deg.get(l.source.id) || 0) + 1); deg.set(l.target.id, (deg.get(l.target.id) || 0) + 1); }
-    const fit = (animate = true) => { const fin = nodes.filter(n => isFinite(n.x) && isFinite(n.y)); if (!fin.length) return; const xs = fin.map(n => n.x), ys = fin.map(n => n.y); const x0 = Math.min(...xs) - 50, x1 = Math.max(...xs) + 50, y0 = Math.min(...ys) - 50, y1 = Math.max(...ys) + 50;
+    const fit = (animate = true, subset = null) => { const fin = (subset || nodes).filter(n => isFinite(n.x) && isFinite(n.y)); if (!fin.length) return; const xs = fin.map(n => n.x), ys = fin.map(n => n.y); const x0 = Math.min(...xs) - 50, x1 = Math.max(...xs) + 50, y0 = Math.min(...ys) - 50, y1 = Math.max(...ys) + 50;
       const k = Math.min(4, 0.95 / Math.max((x1 - x0) / r.width, (y1 - y0) / r.height)); const t = d3.zoomIdentity.translate(r.width / 2 - k * (x0 + x1) / 2, r.height / 2 - k * (y0 + y1) / 2).scale(k);
       if (animate) d3.select(canvas).transition().duration(600).call(zoom.transform, t); else d3.select(canvas).call(zoom.transform, t); };
+    fitFn = fit;
     sim = d3.forceSimulation(nodes)
       .force("link", d3.forceLink(links).id(n => n.id).distance(l => (40 + 80 / (1 + Math.log2(1 + l.w))) * spread)
         .strength(l => Math.min(0.8, (0.3 + 0.1 * Math.log2(1 + l.w)) / Math.sqrt(Math.min(deg.get(l.source.id) || 1, deg.get(l.target.id) || 1)))))
@@ -771,7 +805,7 @@ function viewGraph() {
       .force("x", d3.forceX(r.width / 2).strength(0.03 / spread))
       .force("y", d3.forceY(r.height / 2).strength(0.035 / spread))
       .alpha(1).alphaDecay(0.018).velocityDecay(0.3)
-      .on("tick", draw).on("end", fit);
+      .on("tick", draw).on("end", () => fit(true, egoFit));
     // warm up synchronously so the layout is settled at once (and works when requestAnimationFrame is paused)
     sim.stop();
     const warm = Math.max(60, Math.min(250, Math.floor(400000 / Math.max(1, links.length + 10 * nodes.length))));

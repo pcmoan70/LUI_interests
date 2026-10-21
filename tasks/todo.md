@@ -84,6 +84,7 @@ Plan: see ../PLAN.md. Tick items as they are completed; add a Review section per
 - [x] Hover explanations (title tooltips) on all publication counts, strengths, similarity and score columns; topic page actions: graph of who collaborated with whom on the topic, relational matrix and interest matrix for the topic (user requests 2026-10-21)
 - [x] Interest matrix: vertical topic labels, hover enlarges label + large tooltip, width fitted to the container (no horizontal scrolling) (user request 2026-10-21)
 - [x] Finn samarbeid: column with number of joint publications (also in CSV) (user request 2026-10-21)
+- [x] Graph: clicking a node centres it and arranges 1st/2nd/3rd-degree contacts on rings (ego layout); farther nodes may fall outside the fitted view; double-click background restores the normal layout (user request 2026-10-21)
 - [ ] Playwright batch PDF export
 - [ ] nb/en toggle, accessibility pass
 
