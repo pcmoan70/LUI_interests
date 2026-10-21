@@ -14,7 +14,7 @@ const THIS_YEAR = new Date().getFullYear();
 
 async function load() {
   const names = ["meta", "taxonomy", "persons", "edges", "groups", "projects", "orders"];
-  const res = await Promise.all(names.map(n => fetch(`data/${n}.json`).then(r => r.json())));
+  const res = await Promise.all(names.map(n => fetch(`data/${n}.json${V}`).then(r => r.json())));
   names.forEach((n, i) => D[n] = res[i]);
   // edges are stored as compact arrays: [s, t, type, w, n, y0, y1, ev]
   D.edges = D.edges.map(e => Array.isArray(e) ? { s: e[0], t: e[1], type: e[2], w: e[3], n: e[4], y0: e[5], y1: e[6], ev: e[7] || [] } : e);
@@ -48,7 +48,8 @@ async function load() {
 
 /* ---- publications are fetched on demand (per person / per topic / search index) ---- */
 const pubCache = new Map();
-async function fetchJSON(url) { try { const r = await fetch(url); if (!r.ok) return null; return await r.json(); } catch { return null; } }
+const V = window.__v && window.__v !== "dev" ? `?v=${window.__v}` : "";   // deploy-time version for cache busting
+async function fetchJSON(url) { try { const r = await fetch(url.startsWith("http") ? url : url + V); if (!r.ok) return null; return await r.json(); } catch { return null; } }
 async function pubsFor(personId) {
   if (!personId) return [];
   if (!pubCache.has(personId)) pubCache.set(personId, fetchJSON(`data/pubs/by_person/${encodeURIComponent(personId.replace(":", "_"))}.json`).then(x => x || []));

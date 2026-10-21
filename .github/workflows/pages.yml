@@ -24,6 +24,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+      - name: Version asset and data URLs (cache busting)
+        run: |
+          V="${GITHUB_SHA::7}"
+          sed -i "s/__v = \"dev\"/__v = \"$V\"/; s#src=\"app.js\"#src=\"app.js?v=$V\"#; s#href=\"styles.css\"#href=\"styles.css?v=$V\"#" web/index.html
+          grep -o '__v = "[^"]*"' web/index.html
       - uses: actions/upload-pages-artifact@v3
         with:
           path: web
