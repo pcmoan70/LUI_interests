@@ -24,24 +24,40 @@ def lui_ids(con) -> set[str]:
     return {r[0] for r in con.execute("SELECT person_id FROM person WHERE is_listed=1 OR resolved_by='cristin_only'")}
 
 
+def name_key(name: str | None) -> str:
+    """Order-independent name key: handles 'Last, First' and 'First Last' alike."""
+    return " ".join(sorted(norm((name or "").replace(",", " ")).split()))
+
+
 def merge_name_duplicates(con) -> int:
-    """Merge name-only nodes (ext:*) into an existing identified person with the same normalised name."""
+    """Merge unlisted nodes (ext:* name-only nodes and cristin:* side records) into the single listed
+    person with the same name; merges are logged to data/derived/merged_duplicates.csv."""
+    import csv
+    from ..paths import DERIVED_DIR
     by_name: dict[str, list[str]] = defaultdict(list)
-    for pid, name in con.execute("SELECT person_id, name_full FROM person WHERE person_id NOT LIKE 'ext:%'"):
-        by_name[norm(name)].append(pid)
+    for pid, name in con.execute("SELECT person_id, name_full FROM person WHERE is_listed=1"):
+        by_name[name_key(name)].append(pid)
     merged = 0
-    for pid, name in con.execute("SELECT person_id, name_full FROM person WHERE person_id LIKE 'ext:%'").fetchall():
-        targets = by_name.get(norm(name), [])
+    log_p = DERIVED_DIR / "merged_duplicates.csv"
+    new_log = not log_p.exists()
+    fh = log_p.open("a", newline="", encoding="utf-8"); w = csv.writer(fh, delimiter=";")
+    if new_log:
+        w.writerow(["merged_person_id", "merged_name", "into_person_id", "into_name"])
+    for pid, name in con.execute("SELECT person_id, name_full FROM person WHERE is_listed=0").fetchall():
+        targets = by_name.get(name_key(name), [])
         if len(targets) != 1:
             continue
         target = targets[0]
+        w.writerow([pid, name, target, con.execute("SELECT name_full FROM person WHERE person_id=?", (target,)).fetchone()[0]])
         con.execute("UPDATE publication_author SET person_id=? WHERE person_id=?", (target, pid))
         for t in ("person_topic", "person_theory", "person_method", "person_keyword", "person_edge"):
             col = "src_person_id" if t == "person_edge" else "person_id"
             con.execute(f"DELETE FROM {t} WHERE {col}=?", (pid,))
         con.execute("DELETE FROM person_edge WHERE dst_person_id=?", (pid,))
+        con.execute("UPDATE project_participant SET person_id=? WHERE person_id=?", (target, pid))
         con.execute("DELETE FROM person WHERE person_id=?", (pid,))
         merged += 1
+    fh.close()
     con.commit()
     return merged
 
@@ -54,7 +70,7 @@ def run(refresh=False, max_age=90, limit=None) -> None:
     # normalised names of every identified person: name-only author rows are attached to them instead of new nodes
     name_to_pid: dict[str, list[str]] = defaultdict(list)
     for pid, name in con.execute("SELECT person_id, name_full FROM person WHERE person_id NOT LIKE 'ext:%'"):
-        name_to_pid[norm(name)].append(pid)
+        name_to_pid[name_key(name)].append(pid)
 
     # publications with at least one LUI author, excluding mass-author papers
     joint_pubs = {r[0]: (r[1], r[2]) for r in con.execute(f"""
@@ -68,9 +84,9 @@ def run(refresh=False, max_age=90, limit=None) -> None:
             "SELECT pub_id, cristin_person_id, name_raw, affiliation_unit_id FROM publication_author WHERE person_id IS NULL"):
         if pub_id not in joint_pubs or not name:
             continue
-        if not cid and len(name_to_pid.get(norm(name), [])) == 1:      # known person, row just lacks the Cristin id
+        if not cid and len(name_to_pid.get(name_key(name), [])) == 1:      # known person, row just lacks the Cristin id
             con.execute("UPDATE publication_author SET person_id=? WHERE pub_id=? AND person_id IS NULL AND cristin_person_id IS NULL AND name_raw=?",
-                        (name_to_pid[norm(name)][0], pub_id, name))
+                        (name_to_pid[name_key(name)][0], pub_id, name))
             continue
         key = f"cristin:{cid}" if cid else f"ext:{hashlib.sha1(norm(name).encode()).hexdigest()[:12]}"
         g = groups.setdefault(key, {"cid": cid, "names": Counter(), "affs": Counter(), "pubs": set(), "core": 0, "years": []})
