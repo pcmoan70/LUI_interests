@@ -4,6 +4,19 @@ const idx = {};               // indexes
 const MACRO_COLORS = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf", "#393b79", "#637939"];
 const EDGE_LABEL = { coauthor: "Medforfatter", cites: "Siterer", shared_group: "Samme forskningsgruppe", shared_project: "Samme prosjekt", topic_similarity: "Tematisk likhet" };
 const EDGE_COLOR = { coauthor: "#0d5c8a", cites: "#c75b12", shared_group: "#2ca02c", shared_project: "#9467bd", topic_similarity: "#999" };
+const HELP = {
+  core: "Antall registrerte arbeider i Cristin/NVA i de vitenskapelige kategoriene artikkel, kapittel, bok/antologi, doktoravhandling og forskningsrapport, alle år. Foredrag, lærebøker, formidling og media telles ikke her.",
+  all: "Alle registrerte arbeider i Cristin/NVA der personen står som forfatter, alle kategorier (også foredrag, lærebøker, formidling og media).",
+  joint: "Antall arbeider (alle kategorier, inntil 30 forfattere) der personen er medforfatter sammen med minst én LUI-ansatt.",
+  topicN: "Antall av personens arbeider (vitenskapelige arbeider og foredrag med tittel) der dette temaet har vekt ≥ 0,2. Hvert arbeid får 1–4 tema med vekter som summerer til 1.",
+  score: "Andel av personens temaprofil: for hvert arbeid summeres temavekt × kategorivekt (artikkel 1,0; kapittel 0,9; bok/avhandling 1,2; rapport 0,7; foredrag 0,3; lærebok 0,5; formidling 0,2) × nyhetsvekt (halveres per 8 år). Presentasjonstekst og egne nøkkelord teller som 1,5–2 arbeider. Summen normaliseres til 1 per person.",
+  topicPubs: "Arbeider der dette temaet er blant de 1–4 tildelte temaene, og som passerer filtrene over (type, år, institutt).",
+  topicPersons: "Personer med temaet i profilen med styrke ≥ 0,05 (se forklaring på styrke).",
+  similarity: "Cosinus-likhet mellom de to personenes temaprofiler (vektorer over 78 tema): 0 = ingen felles tema, 1 = identisk profil.",
+  theoryOverlap: "Andel av utgangspersonens teoretiske rammeverk (gjenkjent med kontrollerte vokabularer i sammendrag, innledning og konklusjon) som kandidaten også bruker.",
+  totalScore: "Vektet sum: tematisk overlapp (cosinus + nøkkelordtreff) × w1 + felles teori × w2 + komplementær metode × w3 + bonus for ikke-medforfattere × w4 + bonus for annet institutt × w5 + nylig aktivitet × w6, med vektene fra glidebryterne.",
+  relations: "Registrerte relasjoner mellom personer: medforfatterskap (vektet 1/(k−1) per arbeid med k kjente forfattere), siteringer (via OpenAlex), felles forskningsgruppe, felles prosjekt og tematisk likhet (cosinus ≥ 0,35).",
+};
 const GROUP_LABEL = { article: "Artikkel", chapter: "Kapittel", monograph: "Bok", phd: "Doktoravhandling", report: "Rapport", lecture: "Foredrag", textbook: "Lærebok", popular: "Populærvitenskap", media: "Media", thesis: "Oppgave", other: "Annet" };
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -43,7 +56,7 @@ async function load() {
     searchOptions: { prefix: true, fuzzy: 0.2, boost: { name: 3, keywords: 2, topicLabels: 2 } } });
   idx.search.addAll(D.persons.map(p => ({ id: p.id, name: p.name, title: p.title, bio: p.bio, keywords: (p.keywords || []).join(" "),
     topicLabels: (p.topics || []).map(t => topicLabel(t.t) + " " + t.t).join(" "), unitName: unitName(p.unit), aff: p.aff || "" })));
-  $("#meta").textContent = `Data generert ${D.meta.generated} · ${fmt(D.meta.nPersons)} personer · ${fmt(D.meta.nPubs)} publikasjoner · ${fmt(D.meta.nEdges)} relasjoner`;
+  $("#meta").innerHTML = `Data generert ${esc(D.meta.generated)} · <span title="Ansatte i LUIs ansattoversikt, ikke-listede LUI-tilknyttede og medforfattere (tidligere LUI, andre OsloMet-enheter, eksterne).">${fmt(D.meta.nPersons)} personer</span> · <span title="Arbeider i Cristin/NVA med minst én kjent forfatter (alle kategorier).">${fmt(D.meta.nPubs)} publikasjoner</span> · <span title="${esc(HELP.relations)}">${fmt(D.meta.nEdges)} relasjoner</span>`;
 }
 
 /* ---- publications are fetched on demand (per person / per topic / search index) ---- */
@@ -252,7 +265,7 @@ function personCard(p, f = {}) {
   return `<div class="card">
     <div class="name">${personLink(p)}</div>
     <div class="sub">${p.listed ? `${esc(p.title || "")} · ${esc(unitLabel(p))}` : `${esc(EXT_LABEL[p.type] || "ikke i ansattoversikten")}${p.aff ? ` · ${esc(p.aff)}${p.country && p.country !== "NO" ? ` (${esc(p.country)})` : ""}` : ""}`}</div>
-    <div class="sub">${p.listed || !p.nJoint ? `${p.nCore} vitensk. publ.` : `${p.nJoint} felles publ. med LUI`}${p.years ? ` (${p.years[0]}–${p.years[1]})` : ""}${p.thin && p.listed ? ' · <span title="lite tekstgrunnlag">tynn profil</span>' : ""}</div>
+    <div class="sub"><span title="${esc(p.listed || !p.nJoint ? HELP.core : HELP.joint)}">${p.listed || !p.nJoint ? `${p.nCore} vitensk. publ.` : `${p.nJoint} felles publ. med LUI`}</span>${p.years ? ` <span title="Første og siste registrerte publiseringsår">(${p.years[0]}–${p.years[1]})</span>` : ""}${p.thin && p.listed ? ' · <span title="lite tekstgrunnlag">tynn profil</span>' : ""}</div>
     <div class="chips">${tops.map(t => topicChip(t)).join("")}${tops.length ? "" : (p.keywords || []).slice(0, 4).map(k => `<span class="chip k">${esc(k)}</span>`).join("")}</div>
   </div>`;
 }
@@ -318,7 +331,7 @@ function pubItem(pub, hl) {
     <div class="meta">${authors}${pub.nAuthors > pub.authors.length ? ` (+${pub.nAuthors - pub.authors.length} andre)` : ""} (${pub.year ?? "?"}). ${esc(pub.venue || "")} ${links} ${more} ${(pub.topics || []).map(t => topicChip(t)).join(" ")}<span class="small muted" data-oa-out></span></div></div>`;
 }
 function bars(items, labelFn, max = 1) {
-  return items.map(t => `<div class="bar"><span>${labelFn(t)}</span><div class="track"><div class="fill" style="width:${Math.round(100 * t.s / max)}%"></div></div><span class="num small">${t.s.toFixed(2)}</span></div>`).join("");
+  return items.map(t => `<div class="bar"><span>${labelFn(t)}</span><div class="track" title="${esc(HELP.score)}"><div class="fill" style="width:${Math.round(100 * t.s / max)}%"></div></div><span class="num small" title="${esc(HELP.score)}">${t.s.toFixed(2)}</span></div>`).join("");
 }
 async function viewPerson(id) {
   const p = idx.person.get(id);
@@ -348,18 +361,19 @@ async function viewPerson(id) {
     <div class="cols">
       <div>
         <h2>Forskningstema</h2>
-        ${p.topics.length ? bars(p.topics.slice(0, 12), t => topicChip(t) + `<span class="muted small"> ${t.n} publ.</span>`, maxS) : '<p class="muted">Ingen tematiserte publikasjoner ennå.</p>'}
+        <p class="muted small" title="${esc(HELP.score)}">Søylen viser temaets andel av profilen; hold musepekeren over tallene for forklaring.</p>
+        ${p.topics.length ? bars(p.topics.slice(0, 12), t => topicChip(t) + `<span class="muted small" title="${esc(HELP.topicN)}"> ${t.n} publ.</span>`, maxS) : '<p class="muted">Ingen tematiserte publikasjoner ennå.</p>'}
         ${p.theories.length ? `<h3>Teoretiske rammeverk</h3><div class="chips">${p.theories.slice(0, 10).map(t => `<a class="chip" href="#/pubs?theory=${esc(t.t)}" title="${t.s.toFixed(2)}">${esc(idx.theory.get(t.t)?.label || t.t)}</a>`).join("")}</div>` : ""}
         ${p.methods.length ? `<h3>Metoder</h3><div class="chips">${p.methods.slice(0, 10).map(t => `<a class="chip" href="#/pubs?method=${esc(t.t)}" title="${t.s.toFixed(2)}">${esc(idx.method.get(t.t)?.label || t.t)}</a>`).join("")}</div>` : ""}
         ${(p.subfields || []).length ? `<h3>OpenAlex-fagfelt</h3><div class="chips">${p.subfields.map(([s, n]) => `<span class="chip k">${esc(s)} (${n})</span>`).join("")}</div>` : ""}
         ${p.keywords.length ? `<h3>Egne nøkkelord (Cristin)</h3><div class="chips">${p.keywords.map(k => `<span class="chip k">${esc(k)}</span>`).join("")}</div>` : ""}
-        <h2>Publikasjoner (${pubs.length})</h2>
+        <h2 title="${esc(HELP.all)}">Publikasjoner (${pubs.length})</h2>
         <div class="toolbar no-print" id="pbar"></div>
         <div id="pubs"></div>
       </div>
       <div>
         <h2>Samarbeid</h2>
-        ${coll.length ? `<table class="tbl"><tr><th>Person</th><th>Relasjon</th></tr>${coll.slice(0, 40).map(c => `<tr><td>${personLink(c.p)} <a class="small" href="#/pair/${esc(id)}/${esc(c.p.id)}">par</a></td><td class="small">${Object.values(c.es).map(e => `<span style="color:${EDGE_COLOR[e.type]}">${EDGE_LABEL[e.type]}${e.type === "coauthor" || e.type === "cites" ? ` (${e.n}${e.y0 ? `, ${e.y0}–${e.y1}` : ""})` : ""}</span>`).join(", ")}</td></tr>`).join("")}</table>` : '<p class="muted">Ingen registrerte relasjoner.</p>'}
+        ${coll.length ? `<table class="tbl"><tr><th>Person</th><th>Relasjon</th></tr>${coll.slice(0, 40).map(c => `<tr><td>${personLink(c.p)} <a class="small" href="#/pair/${esc(id)}/${esc(c.p.id)}">par</a></td><td class="small">${Object.values(c.es).map(e => `<span style="color:${EDGE_COLOR[e.type]}" title="${e.type === "coauthor" ? "Antall felles arbeider (inntil 30 forfattere) og årsspenn" : e.type === "cites" ? "Antall siteringer mellom de to personenes arbeider (OpenAlex)" : e.type === "topic_similarity" ? HELP.similarity : ""}">${EDGE_LABEL[e.type]}${e.type === "coauthor" || e.type === "cites" ? ` (${e.n}${e.y0 ? `, ${e.y0}–${e.y1}` : ""})` : ""}</span>`).join(", ")}</td></tr>`).join("")}</table>` : '<p class="muted">Ingen registrerte relasjoner.</p>'}
         <h2>Mulige nye samarbeidspartnere</h2>
         <p class="muted small">Tematisk nærhet uten eksisterende medforfatterskap. <a href="#/score?who=${encodeURIComponent(p.name)}">Juster kriterier →</a></p>
         ${suggestions.length ? `<table class="tbl">${suggestions.map(s => `<tr><td>${personLink(s.p)}<div class="small muted">${esc(unitLabel(s.p))} · ${esc(s.p.title || "")}</div></td><td class="num">${s.s.toFixed(2)}</td><td><a class="small" href="#/pair/${esc(id)}/${esc(s.p.id)}">par</a></td></tr>`).join("")}</table>` : '<p class="muted">Trenger temaprofil.</p>'}
@@ -391,7 +405,7 @@ async function viewPair(a, b) {
   const thA = new Set(pa.theories.map(t => t.t)), thB = new Set(pb.theories.map(t => t.t)), meA = new Set(pa.methods.map(t => t.t)), meB = new Set(pb.methods.map(t => t.t));
   app.innerHTML = `
     <h1>${personLink(pa)} &amp; ${personLink(pb)}</h1>
-    <div class="muted">${esc(unitLabel(pa))} · ${esc(pa.title || "")} &nbsp;|&nbsp; ${esc(unitLabel(pb))} · ${esc(pb.title || "")} &nbsp;|&nbsp; tematisk likhet ${cosine(va, vb).toFixed(2)}</div>
+    <div class="muted">${esc(unitLabel(pa))} · ${esc(pa.title || "")} &nbsp;|&nbsp; ${esc(unitLabel(pb))} · ${esc(pb.title || "")} &nbsp;|&nbsp; <span title="${esc(HELP.similarity)}">tematisk likhet ${cosine(va, vb).toFixed(2)}</span></div>
     <div class="cols"><div>
       <h2>Felles tema</h2>${shared.length ? `<div class="chips">${shared.map(t => topicChip(t, ` ${t.s.toFixed(2)}`)).join("")}</div>` : '<p class="muted">Ingen felles tema.</p>'}
       <h3>Komplementære tema</h3>
@@ -399,7 +413,7 @@ async function viewPair(a, b) {
       <div class="small muted">${esc(pb.name)}:</div><div class="chips">${onlyB.map(t => topicChip(t)).join("") || "–"}</div>
       ${[...thA].filter(x => thB.has(x)).length ? `<h3>Felles teori</h3><div class="chips">${[...thA].filter(x => thB.has(x)).map(x => `<span class="chip">${esc(idx.theory.get(x)?.label || x)}</span>`).join("")}</div>` : ""}
       ${[...meA].filter(x => meB.has(x)).length ? `<h3>Felles metode</h3><div class="chips">${[...meA].filter(x => meB.has(x)).map(x => `<span class="chip">${esc(idx.method.get(x)?.label || x)}</span>`).join("")}</div>` : ""}
-      <h2>Felles publikasjoner (${joint.length})</h2>${joint.map(p => pubItem(p)).join("") || '<p class="muted">Ingen.</p>'}
+      <h2 title="Arbeider i Cristin/NVA der begge står som forfattere (alle kategorier).">Felles publikasjoner (${joint.length})</h2>${joint.map(p => pubItem(p)).join("") || '<p class="muted">Ingen.</p>'}
     </div><div>
       <h2>Relasjoner</h2>
       <ul>${Object.values(es).map(e => `<li><span style="color:${EDGE_COLOR[e.type]}">${EDGE_LABEL[e.type]}</span>: vekt ${e.w}, ${e.n} belegg${e.y0 ? ` (${e.y0}–${e.y1})` : ""}</li>`).join("") || "<li class='muted'>Ingen direkte relasjon</li>"}</ul>
@@ -425,7 +439,7 @@ function viewTopics() {
       return `<h2 style="border-color:${macroColor(idx.macro.get(m.macro_id))}">${esc(m.macro_id)} · ${esc(m.label_nb || m.label_en)} <span class="muted small">${esc(m.definition || "")}</span></h2>
       <div class="grid">${ts.map(t => { const n = f.unit ? ppl.filter(p => p.topics.some(x => x.t === t.topic_id && x.s >= 0.05)).length : t.n_persons;
         return `<div class="card"><div class="name"><span class="muted small">${esc(t.topic_id)}</span> <a href="#/topic/${esc(t.topic_id)}">${esc(t.label_nb || t.label_en)}</a></div>
-        <div class="sub">${esc(t.label_en || "")}</div><div class="small">${esc(t.definition_nb || t.definition_en || "")}</div><div class="sub">${n} personer · ${t.n_pubs} publ.</div></div>`; }).join("")}</div>`; }).join("");
+        <div class="sub">${esc(t.label_en || "")}</div><div class="small">${esc(t.definition_nb || t.definition_en || "")}</div><div class="sub"><span title="${esc(HELP.topicPersons)}">${n} personer</span> · <span title="Arbeider der temaet er blant de 1–4 tildelte temaene (vitenskapelige arbeider og foredrag med tittel).">${t.n_pubs} publ.</span></div></div>`; }).join("")}</div>`; }).join("");
     $("#f_count").textContent = "";
   });
 }
@@ -446,7 +460,12 @@ async function viewTopic(id) {
     <div class="toolbar" id="bar"></div>
     <div class="cols"><div><h2 id="ph">Personer</h2><div id="people"></div><h2 id="pubh">Publikasjoner</h2><div id="pubs"></div></div>
     <div><h2>Utvikling</h2><div class="small" id="trend"></div><h2>Nærliggende tema</h2><div class="chips">${adjacent.map(([k]) => topicChip(k)).join("")}</div>
-    <p class="small"><a href="#/graph?topic=${esc(id)}">Graf for dette temaet →</a> · <a href="#/matrix?topic=${esc(id)}">matrise →</a></p></div></div>`;
+    </div></div>`;
+  $("#bar").insertAdjacentHTML("beforebegin", `<div class="toolbar no-print" style="margin:.4rem 0 .2rem">
+      <a class="btn" href="#/graph?topic=${esc(id)}&et=coauthor,cites,shared_project&minw=0.25&color=unit&hideIso=0" title="Personer med dette temaet i profilen (styrke ≥ 0,05) og relasjonene mellom dem: medforfatterskap, siteringer og felles prosjekter">Graf: hvem har samarbeidet med hvem om ${esc(t.label_nb || t.label_en)} →</a>
+      <a class="btn" href="#/relmatrix?topic=${esc(id)}&et=coauthor,cites,shared_project&hideIso=0">Relasjonsmatrise for temaet →</a>
+      <a class="btn" href="#/matrix?tt=${esc(id)}">Interessematrise →</a>
+    </div>`);
   filterBar($("#bar"), [
     { id: "unit", type: "select", label: "institutt", options: unitOptions() },
     { id: "type", type: "select", label: "stilling", options: [["academic", "vitenskapelig"], ["admin", "administrativ"], ["former_lui", "tidligere/annen LUI"], ["oslomet", "annen OsloMet"], ["external", "ekstern"]] },
@@ -461,8 +480,8 @@ async function viewTopic(id) {
     const [ya, yb] = yearRange(f);
     const people = D.persons.map(p => ({ p, s: (p.topics || []).find(x => x.t === id)?.s ?? 0, n: (p.topics || []).find(x => x.t === id)?.n ?? 0 }))
       .filter(x => x.s >= (+f.tmin || 0.05) && scopeOk(x.p, f.scope) && (!f.unit || x.p.unit === f.unit) && (!f.type || x.p.type === f.type) && (!yearsSet || activeIn(x.p, ya, yb))).sort((a, b) => b.s - a.s);
-    $("#ph").textContent = `Personer (${people.length})`; $("#pubh").textContent = `Publikasjoner (${pubs.length})`;
-    $("#people").innerHTML = `<table class="tbl"><tr><th>Person</th><th>Institutt</th><th class="num">Styrke</th><th class="num">Publ.</th></tr>${people.slice(0, 100).map(x => `<tr><td>${personLink(x.p)}</td><td>${esc(unitLabel(x.p))}</td><td class="num">${x.s.toFixed(2)}</td><td class="num">${x.n}</td></tr>`).join("")}</table>`;
+    $("#ph").textContent = `Personer (${people.length})`; $("#ph").title = HELP.topicPersons; $("#pubh").textContent = `Publikasjoner (${pubs.length})`; $("#pubh").title = HELP.topicPubs;
+    $("#people").innerHTML = `<table class="tbl"><tr><th>Person</th><th>Institutt</th><th class="num" title="${esc(HELP.score)}">Styrke ⓘ</th><th class="num" title="${esc(HELP.topicN)}">Publ. ⓘ</th></tr>${people.slice(0, 100).map(x => `<tr><td>${personLink(x.p)}</td><td>${esc(unitLabel(x.p))}</td><td class="num">${x.s.toFixed(2)}</td><td class="num">${x.n}</td></tr>`).join("")}</table>`;
     $("#pubs").innerHTML = pubs.slice(0, 150).map(p => pubItem(p)).join("");
     const years = [...d3.rollup(pubs.filter(p => p.year), v => v.length, p => p.year).entries()].sort((a, b) => a[0] - b[0]);
     const drawTrend = () => {
@@ -842,7 +861,7 @@ function viewScore() {
     }).filter(r => r.score > 0.15).sort((a, b) => b.score - a.score).slice(0, 50);
     current = rows;
     $("#res").innerHTML = `<h2>Forslag${who ? ` for ${esc(who.name)}` : ` for «${esc(idea)}»`} (${rows.length})</h2>
-      <table class="tbl"><tr><th>#</th><th>Person</th><th>Institutt</th><th>Felles / relevante tema</th><th class="num">Tema</th><th class="num">Teori</th><th class="num">Score</th><th></th></tr>
+      <table class="tbl"><tr><th>#</th><th>Person</th><th>Institutt</th><th>Felles / relevante tema</th><th class="num" title="${esc(HELP.similarity)}">Tema ⓘ</th><th class="num" title="${esc(HELP.theoryOverlap)}">Teori ⓘ</th><th class="num" title="${esc(HELP.totalScore)}">Score ⓘ</th><th></th></tr>
       ${rows.map((r, i) => { const pv = personVector(r.p); const shared = [...base.keys()].filter(k => pv.has(k)).sort((a, b) => pv.get(b) - pv.get(a)).slice(0, 3);
         return `<tr><td>${i + 1}</td><td>${personLink(r.p)}<div class="small muted">${esc(r.p.title || "")}${who && !r.isNew ? " · medforfattere" : ""}</div></td><td>${esc(unitLabel(r.p))}</td><td><div class="chips">${shared.map(t => topicChip(t)).join("")}</div></td><td class="num">${r.topic.toFixed(2)}</td><td class="num">${r.theory.toFixed(2)}</td><td class="num"><b>${r.score.toFixed(2)}</b></td><td>${who ? `<a class="small" href="#/pair/${esc(who.id)}/${esc(r.p.id)}">par</a>` : ""}</td></tr>`; }).join("")}</table>`;
   };
