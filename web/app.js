@@ -2,8 +2,8 @@
 const D = {};                 // loaded data
 const idx = {};               // indexes
 const MACRO_COLORS = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf", "#393b79", "#637939"];
-const EDGE_LABEL = { coauthor: "Medforfatter", cites: "Siterer", shared_group: "Samme forskningsgruppe", shared_project: "Samme prosjekt", topic_similarity: "Tematisk likhet" };
-const EDGE_COLOR = { coauthor: "#0d5c8a", cites: "#c75b12", shared_group: "#2ca02c", shared_project: "#9467bd", topic_similarity: "#999" };
+const EDGE_LABEL = { coauthor: "Medforfatter", cites: "Siterer", second_degree: "Via felles kontakt", shared_group: "Samme forskningsgruppe", shared_project: "Samme prosjekt", topic_similarity: "Tematisk likhet" };
+const EDGE_COLOR = { coauthor: "#0d5c8a", cites: "#c75b12", second_degree: "#17becf", shared_group: "#2ca02c", shared_project: "#9467bd", topic_similarity: "#999" };
 const HELP = {
   core: "Antall registrerte arbeider i Cristin/NVA i de vitenskapelige kategoriene artikkel, kapittel, bok/antologi, doktoravhandling og forskningsrapport, alle år. Foredrag, lærebøker, formidling og media telles ikke her.",
   all: "Alle registrerte arbeider i Cristin/NVA der personen står som forfatter, alle kategorier (også foredrag, lærebøker, formidling og media).",
@@ -16,7 +16,7 @@ const HELP = {
   simScore: "Tematisk likhet (0–1) mellom utgangspersonen (eller idéen) og kandidaten, beregnet bare over temaene som er slått på i listen over – tema med strek gjennom holdes utenfor for begge. 0 = ingen felles tema, 1 = samme profil.",
   theoryOverlap: "Andel av utgangspersonens teoretiske rammeverk (gjenkjent med kontrollerte vokabularer i sammendrag, innledning og konklusjon) som kandidaten også bruker.",
   totalScore: "Vektet sum: tematisk likhet over temaene som er slått på (+ nøkkelordtreff for idé-søk) × w1 + felles teori × w2 + komplementær metode × w3 + bonus for ikke-medforfattere × w4 + bonus for annet institutt × w5 + nylig aktivitet × w6, med vektene fra glidebryterne.",
-  relations: "Registrerte relasjoner mellom personer: medforfatterskap (vektet 1/(k−1) per arbeid med k kjente forfattere), siteringer (via OpenAlex), felles forskningsgruppe, felles prosjekt og tematisk likhet (likhet ≥ 0,35).",
+  relations: "Registrerte relasjoner mellom personer: medforfatterskap (vektet 1/(k−1) per arbeid med k kjente forfattere), siteringer (via OpenAlex), via felles kontakt (to LUI-personer som ikke er medforfattere, men begge har medforfatter- eller siteringsrelasjon til samme tredjeperson; vekt = antall felles kontakter), felles forskningsgruppe, felles prosjekt og tematisk likhet (likhet ≥ 0,35).",
 };
 const GROUP_LABEL = { article: "Artikkel", chapter: "Kapittel", monograph: "Bok", phd: "Doktoravhandling", report: "Rapport", lecture: "Foredrag", textbook: "Lærebok", popular: "Populærvitenskap", media: "Media", thesis: "Oppgave", other: "Annet" };
 
@@ -658,7 +658,8 @@ function viewGraph() {
     for (const l of links) {
       const dim = selected && !(l.source.id === selected.id || l.target.id === selected.id);
       ctx.globalAlpha = dim ? 0.06 : 0.45; ctx.strokeStyle = EDGE_COLOR[l.type]; ctx.lineWidth = (0.6 + Math.min(4, Math.log2(1 + l.w))) / Math.sqrt(transform.k);
-      ctx.beginPath(); ctx.moveTo(l.source.x, l.source.y); ctx.lineTo(l.target.x, l.target.y); ctx.stroke();
+      ctx.setLineDash(l.type === "second_degree" ? [4 / transform.k, 4 / transform.k] : []);
+      ctx.beginPath(); ctx.moveTo(l.source.x, l.source.y); ctx.lineTo(l.target.x, l.target.y); ctx.stroke(); ctx.setLineDash([]);
       if (l.type === "cites") { const dx = l.target.x - l.source.x, dy = l.target.y - l.source.y, len = Math.hypot(dx, dy) || 1, ux = dx / len, uy = dy / len, tx = l.target.x - ux * l.target.r, ty = l.target.y - uy * l.target.r, a = 4 / Math.sqrt(transform.k);
         ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(tx - ux * a * 2 - uy * a, ty - uy * a * 2 + ux * a); ctx.lineTo(tx - ux * a * 2 + uy * a, ty - uy * a * 2 - ux * a); ctx.closePath(); ctx.fillStyle = EDGE_COLOR[l.type]; ctx.fill(); }
     }
@@ -684,6 +685,7 @@ function viewGraph() {
     else if (e.type === "cites") ev = `${e.n} sitering(er) mellom publikasjonene deres (se parsiden).`;
     else if (e.type === "shared_group") ev = e.ev.map(g => esc(idx.group.get(g)?.name || g)).join("<br>");
     else if (e.type === "shared_project") ev = e.ev.map(x => esc(idx.project.get(x)?.title_nb || x)).join("<br>");
+    else if (e.type === "second_degree") ev = `Felles kontakter (${e.n}): ` + e.ev.map(id => { const p = idx.person.get(id); return p ? personLink(p) : esc(id); }).join(", ");
     else ev = e.ev.map(t => topicChip(t)).join(" ");
     const out = $("#edgeEv"); if (out) out.innerHTML = ev; };
 

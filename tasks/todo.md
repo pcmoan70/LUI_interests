@@ -87,6 +87,7 @@ Plan: see ../PLAN.md. Tick items as they are completed; add a Review section per
 - [x] Graph: clicking a node centres it and arranges 1st/2nd/3rd-degree contacts on rings (ego layout); farther nodes may fall outside the fitted view; double-click background restores the normal layout (user request 2026-10-21)
 - [x] Finn samarbeid: topic chips toggle on/off in the comparison (strike-through = off), persisted in the URL (user request 2026-10-21)
 - [x] Topic page → interest matrix shows the persons with the topic (≥0.10, max 80) and all their other topics (user request 2026-10-21)
+- [x] Second-degree relation 'Via felles kontakt' (two LUI persons sharing a coauthor/citation contact without being coauthors; weight = number of shared contacts, intermediaries as evidence; dashed in graph) (user request 2026-10-21)
 - [ ] Playwright batch PDF export
 - [ ] nb/en toggle, accessibility pass
 

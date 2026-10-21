@@ -135,7 +135,7 @@ def run(refresh=False, max_age=None, limit=None) -> None:
     for person in persons:
         person["subfields"] = sorted(sf_count[person["id"]].items(), key=lambda x: -x[1])[:6]
 
-    edges = [[r[0], r[1], r[2], r[3], r[4], r[6], r[7], (json.loads(r[5])[:8] if r[2] in ("shared_group", "shared_project", "topic_similarity") else None)]
+    edges = [[r[0], r[1], r[2], r[3], r[4], r[6], r[7], (json.loads(r[5])[:8] if r[2] in ("shared_group", "shared_project", "topic_similarity", "second_degree") else None)]
              for r in con.execute("SELECT src_person_id, dst_person_id, edge_type, weight, n_evidence, evidence_json, first_year, last_year FROM person_edge")]
     groups = [dict(r) for r in con.execute("SELECT group_id AS id, name, url, description FROM research_group")]
     projects = [dict(r) for r in con.execute("SELECT project_id AS id, title_nb, title_en, summary, start_date, end_date, status, url FROM project WHERE project_id IN (SELECT project_id FROM project_participant WHERE person_id IS NOT NULL)")]

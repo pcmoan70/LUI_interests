@@ -66,6 +66,22 @@ def run(refresh=False, max_age=None, limit=None) -> None:
         for a, b in combinations(sorted(members), 2):
             _add(edges, a, b, "shared_project", 1.0, prj)
 
+    # --- second degree: A and B share a coauthor/citation contact C but are not coauthors themselves
+    direct: dict[str, set[str]] = defaultdict(set)
+    for (a, b, typ), e in list(edges.items()):
+        if typ in ("coauthor", "cites"):
+            direct[a].add(b); direct[b].add(a)
+    coauth = {(a, b) for (a, b, typ) in edges if typ == "coauthor"}
+    n2 = 0
+    for c, nbrs in direct.items():
+        lui_nbrs = sorted(n for n in nbrs if n in lui)
+        for a, b in combinations(lui_nbrs, 2):
+            if (a, b) in coauth or (b, a) in coauth:
+                continue
+            _add(edges, a, b, "second_degree", 1.0, c)
+            n2 += 1
+    print(f"  second-degree pairs: {sum(1 for k in edges if k[2] == 'second_degree')}", flush=True)
+
     # --- topic similarity (cosine of person x topic vectors), only when profiles exist
     rows = [r for r in con.execute("SELECT person_id, topic_id, score FROM person_topic").fetchall() if r[0] in lui]
     if rows:
