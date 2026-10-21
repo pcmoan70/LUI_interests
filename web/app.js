@@ -445,13 +445,14 @@ async function viewTopic(id) {
     { id: "ptype", type: "select", label: "publikasjonstype", options: typeOptions() },
     { id: "y", type: "years" },
     { id: "tmin", type: "range", label: "min. styrke", min: 0, max: 0.6, step: 0.05, value: 0.05 },
+    SCOPE_FIELD(),
     { id: "coreOnly", type: "check", label: "bare vitenskapelige", value: true },
   ], f => {
     const pubs = allPubs.filter(p => pubMatches(p, f) && (!f.unit || p.authors.some(a => a.p && idx.person.get(a.p)?.unit === f.unit))).sort((a, b) => (b.year ?? 0) - (a.year ?? 0));
     const yearsSet = f.y0 || f.y1;
     const [ya, yb] = yearRange(f);
     const people = D.persons.map(p => ({ p, s: (p.topics || []).find(x => x.t === id)?.s ?? 0, n: (p.topics || []).find(x => x.t === id)?.n ?? 0 }))
-      .filter(x => x.s >= (+f.tmin || 0.05) && (!f.unit || x.p.unit === f.unit) && (!f.type || x.p.type === f.type) && (!yearsSet || activeIn(x.p, ya, yb))).sort((a, b) => b.s - a.s);
+      .filter(x => x.s >= (+f.tmin || 0.05) && scopeOk(x.p, f.scope) && (!f.unit || x.p.unit === f.unit) && (!f.type || x.p.type === f.type) && (!yearsSet || activeIn(x.p, ya, yb))).sort((a, b) => b.s - a.s);
     $("#ph").textContent = `Personer (${people.length})`; $("#pubh").textContent = `Publikasjoner (${pubs.length})`;
     $("#people").innerHTML = `<table class="tbl"><tr><th>Person</th><th>Institutt</th><th class="num">Styrke</th><th class="num">Publ.</th></tr>${people.slice(0, 100).map(x => `<tr><td>${personLink(x.p)}</td><td>${esc(unitName(x.p.unit))}</td><td class="num">${x.s.toFixed(2)}</td><td class="num">${x.n}</td></tr>`).join("")}</table>`;
     $("#pubs").innerHTML = pubs.slice(0, 150).map(p => pubItem(p)).join("");
@@ -1115,6 +1116,23 @@ function viewAbout() {
     <h2>PDF</h2><p>Alle sider har utskriftsvisning: bruk «PDF»-knappen (eller Ctrl/Cmd+P) og velg «Lagre som PDF».</p>`;
 }
 
+/* ---------------- sortable tables: click a header to sort, click again to reverse ---------------- */
+document.addEventListener("click", ev => {
+  const th = ev.target.closest("table.tbl th"); if (!th) return;
+  const table = th.closest("table"), headRow = th.parentElement, col = [...headRow.children].indexOf(th);
+  const rows = [...table.querySelectorAll("tr")].filter(r => r !== headRow && r.children.length > col);
+  const text = r => (r.children[col]?.textContent || "").trim();
+  const num = v => { const m = v.replace(/\s/g, "").replace(",", ".").match(/-?\d+(\.\d+)?/); return m ? parseFloat(m[0]) : NaN; };
+  const vals = rows.map(text).filter(Boolean);
+  const numeric = vals.length && vals.filter(v => !isNaN(num(v))).length >= 0.8 * vals.length;
+  const dir = th.classList.contains("sort-asc") ? -1 : 1;
+  headRow.querySelectorAll("th").forEach(h => h.classList.remove("sort-asc", "sort-desc"));
+  th.classList.add(dir === 1 ? "sort-asc" : "sort-desc");
+  rows.sort((a, b) => { const x = text(a), y = text(b);
+    if (numeric) { const nx = num(x), ny = num(y); return (isNaN(nx) ? 1 : isNaN(ny) ? -1 : nx - ny) * dir; }
+    return x.localeCompare(y, "nb", { numeric: true, sensitivity: "base" }) * dir; });
+  for (const r of rows) r.parentElement.appendChild(r);
+});
 document.addEventListener("click", ev => {
   const a = ev.target.closest("a[data-oa]"); if (!a) return;
   ev.preventDefault();
