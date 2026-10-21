@@ -6,6 +6,10 @@ and methods per person, coauthorship, citations, shared research groups and proj
 and external coauthors. The aim is practical: find colleagues to collaborate with, ask
 for advice, or develop new research ideas together.
 
+Live site: **https://pcmoan70.github.io/LUI_interests/** (GitHub Pages, redeployed by the
+workflow in `.github/workflows/pages.yml` on every push to `main` that touches `web/`).
+Repository: https://github.com/pcmoan70/LUI_interests
+
 Everything runs locally. Sources are public (oslomet.no, Cristin, Nasjonalt vitenarkiv/NVA,
 OpenAlex). No LLM API is required.
 
