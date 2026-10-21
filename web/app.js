@@ -1114,10 +1114,19 @@ function viewRelMatrix() {
   app.innerHTML = `<h1>Relasjonsmatrise: personer × personer</h1>
     <p class="muted">Hver celle er en relasjon (medforfatterskap, sitering, felles gruppe/prosjekt eller tematisk likhet). Standardrekkefølgen er hierarkisk: institutter (ordnet etter hvor sterkt de henger sammen) → Louvain-fellesskap innenfor hvert institutt → spektral ordning innen hvert fellesskap, slik at hvert institutt og hvert fellesskap er en sammenhengende blokk langs diagonalen. Tykke linjer og fargebånd markerer institutter, tynne linjer fellesskap. Matrisen er symmetrisk for medforfatterskap, grupper, prosjekter og tematisk likhet; siteringer er rettet (rad siterer kolonne) og vises som standard også speilet med lysere farge, slå av «symmetrisk» for å se retningen alene. «Flat blokkstruktur» optimaliserer i stedet hele utvalget under ett (laveste arrangementskostnad av flere kandidater).</p>
     <div class="toolbar" id="bar"></div>
-    <div class="legend">${Object.entries(EDGE_LABEL).map(([k, v]) => `<span><i style="background:${EDGE_COLOR[k]}"></i>${v}</span>`).join("")}</div>
+    <div class="legend" id="rlegend"></div>
     <div class="toolbar no-print"><button type="button" id="csv">Last ned matrise (CSV)</button></div>
     <div class="matrix-wrap" id="mx"></div><div class="tooltip" id="tip" hidden></div>`;
   let lastOrder = [], lastCells = [];
+  // legend swatches toggle edge types; the matrix collapses to persons that have at least one of the chosen relations
+  $("#rlegend").addEventListener("click", ev => {
+    const el = ev.target.closest("[data-legend]"); if (!el) return;
+    const val = el.dataset.legend.split(":")[1];
+    const cb = $(`#f_et input[value="${val}"]`); if (!cb) return;
+    cb.checked = !cb.checked;
+    const iso = $("#f_hideIso"); if (iso && !iso.checked) iso.checked = true;
+    cb.dispatchEvent(new Event("input", { bubbles: true }));
+  });
   const st = getQS();
   filterBar($("#bar"), [
     { id: "et", type: "multi", label: "kanttyper (brukes i klyngingen)", options: Object.entries(EDGE_LABEL), value: "coauthor,cites,shared_project" },
@@ -1136,6 +1145,7 @@ function viewRelMatrix() {
     SCOPE_FIELD(),
   ], f => {
     const types = new Set((f.et || "").split(",").map(x => x.trim()).filter(Boolean));
+    $("#rlegend").innerHTML = Object.entries(EDGE_LABEL).map(([k, v]) => `<span data-legend="et:${k}" class="${types.has(k) ? "on" : ""}" title="klikk for å slå av/på"><i style="background:${types.has(k) ? EDGE_COLOR[k] : "transparent"}"></i>${esc(v)}</span>`).join("");
     const [y0, y1] = yearRange(f); const yearsSet = f.y0 || f.y1;
     let people = D.persons.filter(p => personMatches(p, { ...f, y0: "", y1: "" }));
     if (yearsSet) people = people.filter(p => activeIn(p, y0, y1));
