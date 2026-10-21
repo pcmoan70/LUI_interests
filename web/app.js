@@ -587,17 +587,24 @@ function viewMatrix() {
     else people.sort((a, b) => { const ma = macroOf(a.topics[0]?.t)?.i ?? 99, mb = macroOf(b.topics[0]?.t)?.i ?? 99; return ma - mb || (b.topics[0]?.s ?? 0) - (a.topics[0]?.s ?? 0); });
     lastPeople = people; lastTopics = topics;
     $("#f_count").textContent = `${people.length} personer × ${topics.length} tema${hasSel ? " (utvalg)" : ""}`;
-    const cw = topics.length <= 12 ? 30 : topics.length <= 30 ? 20 : 14, rh = people.length <= 15 ? 26 : people.length <= 40 ? 18 : 14;
     const topicText = t => `${t.topic_id} ${t.label_nb || t.label_en}`;
     const left = Math.min(420, 16 + 6.3 * Math.max(8, ...people.map(p => p.name.length)));
-    const top = Math.min(420, 20 + 0.87 * 5.9 * Math.max(10, ...topics.map(t => topicText(t).length)));
+    const top = Math.min(460, 24 + 6.0 * Math.max(10, ...topics.map(t => topicText(t).length)));   // labels are vertical
+    // fit the full width of the container: no horizontal scrolling
+    const avail = Math.max(300, ($("#mx").clientWidth || 1000) - left - 16);
+    const cw = Math.max(5, Math.min(topics.length <= 12 ? 30 : 22, Math.floor(avail / Math.max(1, topics.length))));
+    const rh = people.length <= 15 ? 26 : people.length <= 40 ? 18 : 14;
     const w = left + topics.length * cw + 10, h = top + people.length * rh + 10;
     const svg = d3.create("svg").attr("width", w).attr("height", h);
     const g = svg.append("g");
-    g.selectAll("text.col").data(topics).join("text").attr("class", "col").attr("transform", (t, i) => `translate(${left + i * cw + cw / 2},${top - 4}) rotate(-60)`)
-      .attr("fill", t => macroColor(idx.macro.get(t.macro_id))).text(t => topicText(t)).style("cursor", "pointer").on("click", (e, t) => location.hash = `#/topic/${t.topic_id}`);
+    const tipT = $("#tip");
+    g.selectAll("text.col").data(topics).join("text").attr("class", "col").attr("transform", (t, i) => `translate(${left + i * cw + cw / 2 + 3},${top - 6}) rotate(-90)`)
+      .attr("fill", t => macroColor(idx.macro.get(t.macro_id))).attr("font-size", Math.min(11, Math.max(7, cw - 2))).text(t => topicText(t)).style("cursor", "pointer")
+      .on("click", (e, t) => location.hash = `#/topic/${t.topic_id}`)
+      .on("mousemove", (e, t) => { tipT.hidden = false; tipT.style.left = e.clientX + 14 + "px"; tipT.style.top = e.clientY + 14 + "px"; tipT.style.fontSize = "1.05rem"; tipT.innerHTML = `<b>${esc(t.topic_id)}</b> ${esc(t.label_nb || t.label_en)}<br><span style="opacity:.8">${esc(t.label_en || "")} · ${esc(idx.macro.get(t.macro_id)?.label_nb || "")}</span>`; })
+      .on("mouseleave", () => { tipT.hidden = true; tipT.style.fontSize = ""; });
     g.selectAll("text.row").data(people).join("text").attr("class", "row").attr("x", left - 4).attr("y", (p, i) => top + i * rh + rh - 3).attr("text-anchor", "end")
-      .text(p => p.name).style("cursor", "pointer").on("click", (e, p) => location.hash = `#/person/${p.id}`);
+      .attr("font-size", Math.min(11, Math.max(7, rh - 3))).text(p => p.name).style("cursor", "pointer").on("click", (e, p) => location.hash = `#/person/${p.id}`);
     const cells = [];
     const tpos = new Map(topics.map((t, j) => [t.topic_id, j]));
     people.forEach((p, i) => p.topics.forEach(t => { const j = tpos.get(t.t); if (j != null && t.s >= min) cells.push({ p, t, i, j }); }));

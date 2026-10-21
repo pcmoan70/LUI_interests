@@ -82,6 +82,7 @@ Plan: see ../PLAN.md. Tick items as they are completed; add a Review section per
 - [x] Person page: direct links to Graf (focused, with externals), Finn samarbeid (person prefilled) and the interest matrix (user request 2026-10-21)
 - [x] Person → matrix link includes the 12 nearest persons by topic cosine; matrix labels untruncated with adaptive margins; Pages deploys with versioned asset/data URLs (cache busting) (user requests 2026-10-21)
 - [x] Hover explanations (title tooltips) on all publication counts, strengths, similarity and score columns; topic page actions: graph of who collaborated with whom on the topic, relational matrix and interest matrix for the topic (user requests 2026-10-21)
+- [x] Interest matrix: vertical topic labels, hover enlarges label + large tooltip, width fitted to the container (no horizontal scrolling) (user request 2026-10-21)
 - [ ] Playwright batch PDF export
 - [ ] nb/en toggle, accessibility pass
 
