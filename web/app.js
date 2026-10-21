@@ -1151,7 +1151,7 @@ function viewRelMatrix() {
     $("#f_count").textContent = `${order.length} personer, ${edges.length} relasjoner · ${nBlocks} blokker · arrangementskostnad ${lastSeriation.cost != null ? lastSeriation.cost.toFixed(1) : "–"} (${lastSeriation.method || f.order || "blokk"})`;
     const cw = Math.max(6, Math.min(14, Math.floor(900 / Math.max(1, order.length))));
     const longest = Math.max(8, ...order.map(id => (idx.person.get(id)?.name || id).length));
-    const left = Math.min(420, 16 + 6.3 * longest), top = Math.min(420, 20 + 0.87 * 6.3 * longest);
+    const left = Math.min(420, 16 + 6.3 * longest), top = Math.min(460, 24 + 6.0 * longest);
     const w = left + order.length * cw + 10, h = top + order.length * cw + 10;
     const svg = d3.create("svg").attr("width", w).attr("height", h);
     const g = svg.append("g");
@@ -1161,7 +1161,7 @@ function viewRelMatrix() {
     const commColor = d3.scaleOrdinal(d3.schemeTableau10);
     const unitColorM = d3.scaleOrdinal(d3.schemeTableau10).domain(D.meta.units.map(u => u.unit_id));
     const labelColor = id => lastSeriation.units ? unitColorM(lastSeriation.units.get(id)) : commColor(comm(id));
-    g.selectAll("text.col").data(order).join("text").attr("class", "col").attr("transform", (id, i) => `translate(${left + i * cw + cw / 2},${top - 4}) rotate(-60)`)
+    g.selectAll("text.col").data(order).join("text").attr("class", "col").attr("transform", (id, i) => `translate(${left + i * cw + cw / 2 + 3},${top - 8}) rotate(-90)`)
       .attr("fill", id => labelColor(id)).text(id => showLabels ? (idx.person.get(id)?.name || id) : "").style("cursor", "pointer").on("click", (e, id) => location.hash = `#/person/${id}`);
     g.selectAll("text.row").data(order).join("text").attr("class", "row").attr("x", left - 4).attr("y", (id, i) => top + i * cw + cw - 2).attr("text-anchor", "end")
       .attr("fill", id => labelColor(id)).text(id => showLabels ? (idx.person.get(id)?.name || id) : "").style("cursor", "pointer").on("click", (e, id) => location.hash = `#/person/${id}`);
