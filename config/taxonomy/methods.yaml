@@ -1,0 +1,93 @@
+# Controlled vocabulary of research methods / designs. Case-insensitive regexes over
+# title + abstract + intro + conclusion.
+methods:
+  - id: qual_interview
+    label: Qualitative interviews
+    patterns: ["semi-structured interview", "semistrukturert", "in-depth interview", "dybdeintervju", "kvalitative intervju", "qualitative interview", "interview study", "intervjustudie", "fokusgruppe", "focus group"]
+  - id: ethnography_observation
+    label: Ethnography / observation
+    patterns: ["ethnograph", "etnograf", "participant observation", "deltakende observasjon", "fieldwork", "feltarbeid", "field notes", "feltnotater", "classroom observation", "klasseromsobservasjon"]
+  - id: video_interaction
+    label: Video / interaction analysis
+    patterns: ["video[- ]?(recorded|observation|data|analysis|opptak)", "videoobservasjon", "interaction analysis", "interaksjonsanalyse", "conversation analysis", "samtaleanalyse", "multimodal interaction"]
+  - id: case_study
+    label: Case study
+    patterns: ["case stud", "casestudie", "kasusstudie", "multiple-case", "single case"]
+  - id: action_research
+    label: Action research / practitioner research
+    patterns: ["action research", "aksjonsforskning", "practitioner research", "praktikerforskning", "self-study", "lesson study", "collaborative inquiry", "participatory research", "deltakerorientert"]
+  - id: design_based
+    label: Design-based research / intervention design
+    patterns: ["design-based research", "designbasert", "design experiment", "educational design research", "intervention stud", "intervensjonsstudie", "innovation project", "utviklingsprosjekt"]
+  - id: rct_quasi
+    label: RCT / quasi-experimental
+    patterns: ["randomi[sz]ed", "randomisert", "\\bRCT\\b", "quasi-experiment", "kvasieksperiment", "control group", "kontrollgruppe", "treatment effect", "pre-?test.*post-?test", "difference-in-differences"]
+  - id: survey_quant
+    label: Survey / questionnaire (quantitative)
+    patterns: ["questionnaire", "spørreskjema", "spørreundersøkelse", "survey data", "survey stud", "cross-sectional", "tverrsnitt", "likert", "respondent"]
+  - id: psychometrics_sem
+    label: Psychometrics / SEM / factor analysis
+    patterns: ["structural equation", "strukturligning", "confirmatory factor", "faktoranalyse", "factor analysis", "rasch", "item response", "measurement invariance", "latent (class|profile|growth)", "multilevel", "flernivå", "hierarchical linear", "regression analys", "regresjonsanalyse"]
+  - id: longitudinal_cohort
+    label: Longitudinal / cohort / register data
+    patterns: ["longitudinal", "longitudinell", "cohort", "kohort", "panel data", "register data", "registerdata", "follow-up study", "oppfølgingsstudie", "\\bMoBa\\b", "growth curve"]
+  - id: large_scale_assessment
+    label: Large-scale assessment data (PISA, TIMSS, national tests)
+    patterns: ["\\bPISA\\b", "\\bTIMSS\\b", "\\bPIRLS\\b", "\\bTALIS\\b", "\\bICCS\\b", "\\bICILS\\b", "nasjonale prøver", "national tests", "elevundersøkelsen", "secondary analysis of"]
+  - id: corpus_linguistics
+    label: Corpus linguistics / text statistics
+    patterns: ["corpus", "korpus", "corpus-based", "korpusbasert", "frequency analysis", "frekvensanalyse", "n-gram", "concordanc", "treebank", "annotated texts"]
+  - id: text_analysis_student
+    label: Analysis of student texts / artefacts
+    patterns: ["student texts", "elevtekster", "elevtekstar", "pupil texts", "writing samples", "skriveprøver", "children'?s drawings", "barnetegninger", "student artefacts", "learner texts", "innlæ?rertekster"]
+  - id: discourse_analysis
+    label: Discourse analysis
+    patterns: ["discourse analy", "diskursanaly", "critical discourse", "kritisk diskurs", "fairclough", "diskursteor", "positioning analysis"]
+  - id: document_policy_analysis
+    label: Document / policy / curriculum analysis
+    patterns: ["document analysis", "dokumentanalyse", "policy analysis", "policyanalyse", "curriculum analysis", "læreplananalyse", "analysis of (the )?curricul", "white paper", "stortingsmelding", "textbook analysis", "lærebokanalyse", "content analysis", "innholdsanalyse"]
+  - id: thematic_analysis
+    label: Thematic / reflexive thematic analysis
+    patterns: ["thematic analysis", "tematisk analyse", "braun and clarke", "reflexive thematic"]
+  - id: grounded_theory
+    label: Grounded theory / constant comparison
+    patterns: ["grounded theory", "constant comparative", "stegvis-deduktiv", "stepwise[- ]deductive", "\\bSDI\\b", "tjora"]
+  - id: narrative_method
+    label: Narrative / life-history methods
+    patterns: ["narrative analysis", "narrativ analyse", "life history", "livshistorie", "biographical", "biografisk", "storytelling method", "narrative interview", "narrativt intervju"]
+  - id: phenomenological_method
+    label: Phenomenological / hermeneutic analysis (IPA, lived experience)
+    patterns: ["interpretative phenomenological", "\\bIPA\\b", "phenomenological analysis", "fenomenologisk analyse", "lived experience", "levd erfaring", "hermeneutic(al)? analysis", "hermeneutisk analyse", "van manen"]
+  - id: arts_based_method
+    label: Arts-based / a/r/tographic / performative methods
+    patterns: ["arts-based research", "kunstbasert forskning", "a/r/tograph", "performative (research|inquiry)", "autoethnograph", "autoetnograf", "poetic inquiry", "visual methods", "visuelle metoder", "photo[- ]elicitation", "walking methodolog"]
+  - id: mixed_methods
+    label: Mixed methods
+    patterns: ["mixed[- ]method", "mixed methods", "metodetriangulering", "kombinasjon av kvalitative og kvantitative", "multi-method", "flermetod"]
+  - id: systematic_review
+    label: Systematic / scoping / literature review
+    patterns: ["systematic review", "systematisk (litteratur)?gjennomgang", "scoping review", "literature review", "litteraturstudie", "kunnskapsoversikt", "kunnskapsoppsummering", "meta-analysis", "metaanalyse", "research synthesis", "forskningsoversikt", "rapid review", "state of the art", "review of research"]
+  - id: conceptual_theoretical
+    label: Conceptual / theoretical / philosophical analysis
+    patterns: ["conceptual (analysis|paper|article)", "begrepsanalyse", "theoretical (paper|article|contribution|analysis)", "teoretisk (artikkel|analyse|bidrag)", "philosophical (analysis|inquiry|investigation)", "filosofisk analyse", "essay", "this chapter (argues|discusses)", "we argue that", "vi argumenterer for"]
+  - id: historical_archival
+    label: Historical / archival research
+    patterns: ["historical (analysis|study|perspective)", "historisk (analyse|studie|perspektiv)", "archival", "arkivmateriale", "arkivstudie", "utdanningshistor", "history of education", "genealog", "archaeological approach"]
+  - id: comparative_international
+    label: Comparative / cross-national study
+    patterns: ["comparative stud", "komparativ", "cross-national", "cross-cultural comparison", "sammenlignende studie", "comparison between .* countries", "international comparison", "internasjonal sammenligning"]
+  - id: program_evaluation
+    label: Programme / policy evaluation
+    patterns: ["evaluation of (the )?(program|project|reform|pilot|intervention)", "evaluering av", "evalueringsrapport", "følgeforskning", "formative evaluation", "summative evaluation", "implementation study", "implementeringsstudie"]
+  - id: learning_analytics_ai
+    label: Learning analytics / computational / NLP methods
+    patterns: ["learning analytics", "læringsanalyse", "machine learning", "maskinlæring", "natural language processing", "språkteknologi", "log data", "loggdata", "eye[- ]tracking", "øyesporing", "computational analysis", "topic model", "network analysis", "nettverksanalyse", "sentiment analysis"]
+  - id: experimental_lab_psych
+    label: Experimental / psychological testing
+    patterns: ["experimental design", "eksperimentell", "laboratory", "reaction time", "standardi[sz]ed test", "standardisert test", "test battery", "testbatteri", "psychometric test", "kartleggingsprøve", "assessment tool", "kartleggingsverktøy", "\\bEEG\\b", "neuro"]
+  - id: delphi_expert
+    label: Delphi / expert panels / consensus methods
+    patterns: ["delphi", "expert panel", "ekspertpanel", "consensus method", "nominal group", "q[- ]methodolog"]
+  - id: participatory_children
+    label: Research with children (participatory, child perspectives)
+    patterns: ["children as co-researchers", "barn som medforskere", "mosaic approach", "child interviews", "barneintervju", "children'?s perspectives", "barns perspektiv", "barnesamtaler", "research with children", "forskning med barn"]

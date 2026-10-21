@@ -1,0 +1,42 @@
+# 10 macro groups for LUI research. Edit freely; ids are referenced from micro_topics.yaml.
+macro:
+  - id: M1
+    label_nb: Språk, lesing, skriving og flerspråklighet
+    label_en: Language, literacy and multilingualism
+    definition: Språkdidaktikk, lese- og skriveopplæring, flerspråklighet, lingvistikk, litteratur for barn og unge, tegnspråk.
+  - id: M2
+    label_nb: Matematikk, naturfag og realfaglig forskning
+    label_en: Mathematics, science and disciplinary STEM research
+    definition: Matematikk- og naturfagdidaktikk, programmering/algoritmisk tenkning, samt fagdisiplinær forskning i fysikk, matematikk, biologi og helsefag.
+  - id: M3
+    label_nb: Digital teknologi og KI i utdanning
+    label_en: Digital technology and AI in education
+    definition: Profesjonsfaglig digital kompetanse, teknologistøttet læring, kunstig intelligens, barns digitale liv, nettbasert undervisning.
+  - id: M4
+    label_nb: Barnehage og barndom
+    label_en: Early childhood education and childhood
+    definition: Barnehagekvalitet, lek, barnehagelærerprofesjonen, barns hverdagsliv og medvirkning, overgang til skole, utsatte barn.
+  - id: M5
+    label_nb: Lærerutdanning, skoleutvikling, ledelse og styring
+    label_en: Teacher education, school development, leadership and governance
+    definition: Praksis og partnerskap, læreres profesjonelle læring, skoleledelse, utdanningsstyring, vurdering, pedagogisk filosofi og utdanningshistorie.
+  - id: M6
+    label_nb: Mangfold, inkludering og spesialpedagogikk
+    label_en: Diversity, inclusion and special needs education
+    definition: Spesialpedagogikk, utviklingshemming, flerkulturell pedagogikk, rasisme og minoriteter, kjønn og identitet, traumer, nyankomne og integrering.
+  - id: M7
+    label_nb: Estetiske fag, kropp og helse
+    label_en: Arts, body and health
+    definition: Kroppsøving, fysisk aktivitet og folkehelse, musikk, drama, kunst og håndverk, aldring og omsorg.
+  - id: M8
+    label_nb: Samfunn, demokrati, religion og bærekraft
+    label_en: Society, democracy, religion and sustainability
+    definition: Demokrati og medborgerskap, KRLE og religionsvitenskap, samfunnsfag- og historiedidaktikk, bærekraft og klima, humaniora.
+  - id: M9
+    label_nb: Internasjonale studier, utvikling og tolking
+    label_en: International studies, development and interpreting
+    definition: Tolking i offentlig sektor, utdanning og utvikling i det globale sør, politisk antropologi, urfolk og dekolonialitet, politisk økologi, kjønn og utvikling.
+  - id: M10
+    label_nb: Yrkesfag, arbeidsliv og voksnes læring
+    label_en: Vocational education, working life and adult learning
+    definition: Yrkesdidaktikk og yrkesfaglærerutdanning, fag- og yrkesopplæring, arbeidsplasslæring, tverrprofesjonelt samarbeid, karriereveiledning.

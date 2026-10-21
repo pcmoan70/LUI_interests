@@ -1,0 +1,647 @@
+# Micro topics (T01..). `clusters` = KMeans clusters in data/derived/clusters_k150.md whose members
+# define the topic centroid (0.7) together with the embedded English definition+keywords (0.3).
+# Topics without clusters are defined by text only. Edit labels/definitions freely; keep ids stable.
+topics:
+  # ---------------- M1 Språk, lesing, skriving og flerspråklighet
+  - id: T01
+    macro: M1
+    label_nb: Flerspråklighet og andrespråksdidaktikk i skolen
+    label_en: Multilingualism and second-language pedagogy in school
+    definition_nb: Undervisning av flerspråklige og minoritetsspråklige elever, norsk som andrespråk, flerspråklighet som ressurs i klasserommet.
+    definition_en: Teaching multilingual and minority-language pupils, Norwegian as a second language, multilingualism as a resource in classrooms.
+    keywords: [flerspråklighet, andrespråk, minoritetsspråklige elever, multilingual classroom, Norwegian as a second language, språkdidaktikk]
+    clusters: [72, 119, 77]
+  - id: T02
+    macro: M1
+    label_nb: Transspråking, språkideologier og språkpolitikk i utdanning
+    label_en: Translanguaging, language ideologies and language policy in education
+    definition_nb: Transspråklige praksiser, læreres og foreldres språkholdninger, språkpolitikk for barnehage og skole.
+    definition_en: Translanguaging practices, teachers' and parents' language beliefs, language education policy for ECEC and school.
+    keywords: [translanguaging, transspråking, language beliefs, language policy, multilingual education, språkideologi]
+    clusters: [87]
+  - id: T03
+    macro: M1
+    label_nb: Skriveopplæring, elevtekster og tekstkompetanse
+    label_en: Writing instruction, student texts and literacy competence
+    definition_nb: Skriving i skole og høyere utdanning, skrivestrategier, elevtekstanalyse, kritisk literacy, akademisk skriving.
+    definition_en: Writing in school and higher education, writing strategies, analysis of student texts, critical literacy, academic writing.
+    keywords: [skriveopplæring, writing instruction, elevtekster, student texts, skrivestrategier, akademisk skriving, literacy]
+    clusters: [85]
+  - id: T04
+    macro: M1
+    label_nb: Lesing, leseforståelse og leseengasjement
+    label_en: Reading, reading comprehension and engagement
+    definition_nb: Leseopplæring, leseforståelse, leselyst, lesing i flerspråklige klasser, lese- og skrivevansker, dysleksi.
+    definition_en: Reading instruction, comprehension, reading engagement, reading in multilingual classes, reading difficulties and dyslexia.
+    keywords: [lesing, leseforståelse, reading engagement, reading comprehension, dysleksi, dyslexia, leseopplæring, library use]
+    clusters: [56]
+  - id: T05
+    macro: M1
+    label_nb: Grammatikk, syntaks, fonologi og språkvariasjon
+    label_en: Grammar, syntax, phonology and language variation
+    definition_nb: "Lingvistisk forskning på norsk og andre språk: grammatikk, syntaks, prosodi, dialekter, språkendring, grammatikkdidaktikk."
+    definition_en: "Linguistic research on Norwegian and other languages: grammar, syntax, prosody, dialects, language change, grammar pedagogy."
+    keywords: [grammatikk, syntaks, fonologi, prosodi, dialekt, språkvariasjon, language change, grammatikkdidaktikk, nynorsk]
+    clusters: [109, 96, 84]
+  - id: T06
+    macro: M1
+    label_nb: Barns språkutvikling, språkkartlegging og språkvansker
+    label_en: Child language development, assessment and language disorders
+    definition_nb: Språktilegnelse hos en- og flerspråklige barn, ordforråd, kartleggingsverktøy (CDI), stamming, afasi, språkintervensjoner.
+    definition_en: Language acquisition in mono- and bilingual children, vocabulary, assessment tools (CDI), stuttering, aphasia, language interventions.
+    keywords: [språkutvikling, language development, vocabulary, bilingual children, CDI, stuttering, stamming, aphasia, språkkartlegging]
+    clusters: [42]
+  - id: T07
+    macro: M1
+    label_nb: Engelskdidaktikk og språkvurdering
+    label_en: English language teaching and language assessment literacy
+    definition_nb: Engelsk som fremmedspråk, læreres vurderingskompetanse (LAL), engelsk som lingua franca, flerspråklige tilnærminger i engelskfaget.
+    definition_en: English as a foreign language, teachers' language assessment literacy, English as a lingua franca, multilingual approaches in ELT.
+    keywords: [EFL, English teaching, language assessment literacy, engelskdidaktikk, English as a lingua franca, washback]
+    clusters: [88, 133, 70]
+  - id: T08
+    macro: M1
+    label_nb: Barne- og ungdomslitteratur og bildebøker
+    label_en: Children's and young adult literature and picturebooks
+    definition_nb: Forskning på og anmeldelser av barne- og ungdomslitteratur, bildebokforskning, representasjon og mangfold i litteratur for barn.
+    definition_en: Research on and reviews of children's and YA literature, picturebook research, representation and diversity in children's books.
+    keywords: [barnelitteratur, bildebøker, picturebooks, children's literature, ungdomslitteratur, bokanmeldelse, fantastisk litteratur]
+    clusters: [93, 102, 81]
+  - id: T09
+    macro: M1
+    label_nb: Litteraturdidaktikk og litterære samtaler
+    label_en: Literature pedagogy and literary conversations
+    definition_nb: Arbeid med litteratur i skole og barnehage, høytlesing, litterære samtaler, lesing av skjønnlitteratur i norskfaget.
+    definition_en: Working with literature in school and ECEC, reading aloud, literary conversations, fiction in the mother-tongue subject.
+    keywords: [litteraturdidaktikk, litterær samtale, høytlesing, reader response, norskfaget, meningsskaping, literature pedagogy]
+    clusters: [138]
+  - id: T10
+    macro: M1
+    label_nb: Norsk som andrespråk for voksne og flerspråklig arbeidsliv
+    label_en: Norwegian as a second language for adults and multilingual working life
+    definition_nb: Voksne innvandreres norskopplæring, introduksjonsprogram, andrespråk i arbeidsplasskommunikasjon og helsetjenester.
+    definition_en: Adult immigrants' Norwegian training, introduction programme, second language in workplace communication and health services.
+    keywords: [voksenopplæring, norskopplæring, introduksjonsprogrammet, andrespråk arbeidsliv, adult second language learning, flyktninger norsk]
+    clusters: [17]
+  - id: T11
+    macro: M1
+    label_nb: Tegnspråk, døve og hørselshemmede
+    label_en: Sign language, deaf and hard-of-hearing
+    definition_nb: Norsk tegnspråk, døves språkmiljø og opplæring, tegnspråktolking, døvblindhet, haptisk kommunikasjon.
+    definition_en: Norwegian Sign Language, deaf language environments and education, sign language interpreting, deafblindness, haptic communication.
+    keywords: [tegnspråk, sign language, døve, deaf, hørselshemmede, døvblind, deaf education, tegnspråktolking]
+    clusters: [9, 75]
+  - id: T12
+    macro: M1
+    label_nb: Språkkontakt, arvespråk og familiespråkpolitikk
+    label_en: Language contact, heritage languages and family language policy
+    definition_nb: Migranters språkbruk, arvespråk (norsk i Amerika, kroatisk i Norge), fransk fonologi og språkkontakt, familiers språkvalg.
+    definition_en: Migrants' language use, heritage varieties, French phonology and language contact, family language policy.
+    keywords: [heritage language, arvespråk, language contact, family language policy, French phonology, migrant speakers, impoliteness]
+    clusters: [63, 92]
+
+  # ---------------- M2 Matematikk, naturfag og realfaglig forskning
+  - id: T13
+    macro: M2
+    label_nb: Matematikklærerutdanning og undervisningskunnskap i matematikk
+    label_en: Mathematics teacher education and mathematical knowledge for teaching
+    definition_nb: Lærerstudenters matematiske kunnskap og mestringstro, refleksjon over elevers resonnering, matematikklærerutdanning i Norge og Malawi.
+    definition_en: Prospective teachers' mathematical knowledge and self-efficacy, reflection on students' reasoning, mathematics teacher education in Norway and Malawi.
+    keywords: [mathematics teacher education, mathematical knowledge for teaching, pre-service teachers, matematikklærerutdanning, self-efficacy, Malawi]
+    clusters: [140, 52, 104, 148, 10]
+  - id: T14
+    macro: M2
+    label_nb: Matematikkundervisning i klasserommet
+    label_en: Mathematics teaching and learning in classrooms
+    definition_nb: Oppgaver, lærebøker, vurdering for læring, motivasjon og matematikkangst, inkluderende matematikkundervisning, LK20 i matematikk.
+    definition_en: Tasks, textbooks, assessment for learning, motivation and mathematics anxiety, inclusive mathematics teaching, curriculum in mathematics.
+    keywords: [matematikkdidaktikk, mathematics education, mathematics tasks, textbooks, mathematics anxiety, vurdering matematikk, LK20]
+    clusters: [89, 114]
+  - id: T15
+    macro: M2
+    label_nb: Resonnering, argumentasjon og bevis i matematikk
+    label_en: Reasoning, argumentation and proof in mathematics
+    definition_nb: Matematisk resonnering, argumentasjon, bevis og problemløsning på barnetrinnet; undring og lekende tenkning.
+    definition_en: Mathematical reasoning, argumentation, proof and problem solving in primary school; wonder and playful thinking.
+    keywords: [matematisk argumentasjon, mathematical argumentation, bevis, proof, mathematical reasoning, problemløsning, problem solving, matematisk resonnering]
+    clusters: [30]
+  - id: T16
+    macro: M2
+    label_nb: Algoritmisk tenkning og programmering i realfag
+    label_en: Computational thinking and programming in STEM education
+    definition_nb: Programmering og algoritmisk tenkning i matematikk og naturfag, lærerutdanning og vurdering av computational thinking.
+    definition_en: Programming and computational thinking in mathematics and science, teacher education and assessment of computational thinking.
+    keywords: [algoritmisk tenkning, computational thinking, programmering, programming, block-based programming, debugging]
+    clusters: [7]
+  - id: T17
+    macro: M2
+    label_nb: Naturfagdidaktikk og utforskende arbeidsmåter
+    label_en: Science education and inquiry-based learning
+    definition_nb: Naturfagundervisning, utforskende arbeidsmåter (IBSE), teknologi og design, klima og vær i naturfag, forskningsbasert naturfaglærerutdanning.
+    definition_en: Science teaching, inquiry-based science education, technology and design, climate and weather topics, research-based science teacher education.
+    keywords: [naturfagdidaktikk, science education, inquiry-based, IBSE, teknologi og design, naturfag, drivhuseffekten, geofag]
+    clusters: [98, 32, 124]
+  - id: T18
+    macro: M2
+    label_nb: Undervisningskvalitet og klasseromsobservasjon
+    label_en: Instructional quality and classroom observation
+    definition_nb: Observasjonsinstrumenter for undervisningskvalitet (MQI, TEDS-Instruct), lærerens tilbakemeldinger, videostudier av matematikkundervisning.
+    definition_en: Observation instruments for teaching quality, teacher feedback, video studies of mathematics lessons.
+    keywords: [instructional quality, classroom observation, observation protocols, teaching quality, video study, teacher feedback]
+    clusters: [62]
+  - id: T19
+    macro: M2
+    label_nb: Partikkelfysikk (ATLAS-samarbeidet)
+    label_en: Particle physics (ATLAS collaboration)
+    definition_nb: "Eksperimentell høyenergifysikk ved LHC: målinger og søk med ATLAS-detektoren."
+    definition_en: "Experimental high-energy physics at the LHC: measurements and searches with the ATLAS detector."
+    keywords: [ATLAS, LHC, proton-proton collisions, Higgs, supersymmetry, particle physics, partikkelfysikk]
+    clusters: [21, 79, 68, 57, 15, 20, 78, 2, 145]
+  - id: T20
+    macro: M2
+    label_nb: Ren matematikk og logikk
+    label_en: Pure mathematics and logic
+    definition_nb: Algebraisk geometri, vektorbunter, topologi, matematisk logikk, typeteori og ontologier.
+    definition_en: Algebraic geometry, vector bundles, topology, mathematical logic, type theory and ontologies.
+    keywords: [algebraic geometry, vector bundles, logic, type theory, topology, fixed points, matematikk]
+    clusters: [39, 22, 116]
+  - id: T21
+    macro: M2
+    label_nb: Biologi, økologi og genetikk
+    label_en: Biology, ecology and genetics
+    definition_nb: Plante- og dyregenetikk, arktisk økologi, sopp- og rotassosiasjoner, akvakultur og fiskehelse.
+    definition_en: Plant and animal genetics, arctic ecology, root-associated fungi, aquaculture and fish health.
+    keywords: [ecology, genetics, Atlantic salmon, fungal communities, arctic plants, biodiversity, biologi]
+    clusters: [43, 117]
+  - id: T22
+    macro: M2
+    label_nb: Ernæring, medisin og fysiologi
+    label_en: Nutrition, medicine and physiology
+    definition_nb: Kosthold og blodlipider, medisinsk og epidemiologisk forskning.
+    definition_en: Diet and blood lipids, medical and epidemiological research.
+    keywords: [nutrition, dietary fat, cholesterol, medicine, epidemiology, ernæring]
+    clusters: [61, 108]
+
+  # ---------------- M3 Digital teknologi og KI i utdanning
+  - id: T23
+    macro: M3
+    label_nb: Profesjonsfaglig digital kompetanse og IKT i lærerutdanning
+    label_en: Professional digital competence and ICT in teacher education
+    definition_nb: Læreres og lærerstudenters digitale kompetanse (PfDK/TPACK), IKT-integrering, digitale ferdigheter, ICILS.
+    definition_en: Teachers' and student teachers' professional digital competence, ICT integration, digital skills, ICILS.
+    keywords: [profesjonsfaglig digital kompetanse, professional digital competence, TPACK, IKT, ICT self-efficacy, ICILS, digitale ferdigheter]
+    clusters: [107, 26, 73, 14]
+  - id: T24
+    macro: M3
+    label_nb: Teknologistøttet læring, VR/AR og makerspace
+    label_en: Technology-enhanced learning, VR/AR and making
+    definition_nb: Immersiv teknologi, augmented og virtual reality, nettbrett, makerspace, datastøttet samarbeidslæring (CSCL), designbasert forskning.
+    definition_en: Immersive technology, augmented and virtual reality, tablets, makerspaces, computer-supported collaborative learning, design-based research.
+    keywords: [virtual reality, augmented reality, CSCL, makerspace, tablets, collaborative learning, 3D, immersive]
+    clusters: [34, 16]
+  - id: T25
+    macro: M3
+    label_nb: Kunstig intelligens, læringsplattformer og sosiomaterielle perspektiver
+    label_en: Artificial intelligence, learning platforms and sociomaterial perspectives
+    definition_nb: KI i utdanning og lærerutdanning, læringsplattformer (VLE), aktør-nettverk-teori, chatboter, digital transformasjon i høyere utdanning.
+    definition_en: AI in education and teacher education, virtual learning environments, actor-network theory, chatbots, digital transformation of higher education.
+    keywords: [kunstig intelligens, AI in education, learning management system, VLE, actor-network theory, chatbot, generativ KI]
+    clusters: [71]
+  - id: T26
+    macro: M3
+    label_nb: Barn og unges digitale liv, spill og medier
+    label_en: Children's and young people's digital lives, gaming and media
+    definition_nb: Digital lek, dataspill (Minecraft), skjermbruk i familien, barn som digitale medborgere, risiko og deltakelse.
+    definition_en: Digital play, video games, screen use in families, children as digital citizens, risk and participation online.
+    keywords: [digital play, gaming, Minecraft, children and media, screen time, digital citizenship, skjermbruk]
+    clusters: [136]
+  - id: T27
+    macro: M3
+    label_nb: Nettbasert undervisning og pandemiens digitale skole
+    label_en: Online teaching and pandemic-era digital schooling
+    definition_nb: Digital undervisning under covid-19, hjemmeskole, fjernundervisning i høyere utdanning, nettbasert tolkeutdanning.
+    definition_en: Digital teaching during covid-19, homeschooling, remote teaching in higher education, online interpreter training.
+    keywords: [covid-19, online teaching, hjemmeskole, homeschooling, remote teaching, nettbasert undervisning, digital lockdown]
+    clusters: [95]
+
+  # ---------------- M4 Barnehage og barndom
+  - id: T28
+    macro: M4
+    label_nb: Barnehagekvalitet og samspill med de yngste
+    label_en: ECEC quality and interactions with toddlers
+    definition_nb: Prosess- og strukturkvalitet i barnehagen, samspillskvalitet, de yngste barnas sosiale kompetanse, GoBaN og ITERS.
+    definition_en: Process and structural quality in ECEC, interaction quality, toddlers' social competence, quality measurement.
+    keywords: [barnehagekvalitet, ECEC quality, interaction quality, toddlers, de yngste barna, ITERS, social competence]
+    clusters: [12]
+  - id: T29
+    macro: M4
+    label_nb: Lek, risikolek og barns medvirkning
+    label_en: Play, risky play and children's participation
+    definition_nb: Lekens egenverdi, risikofylt lek, barns perspektiver og medvirkning, samlingsstund, utelek og fysisk miljø i barnehagen.
+    definition_en: The value of play, risky play, children's perspectives and participation, circle time, outdoor play and physical environments in ECEC.
+    keywords: [lek, play, risikolek, risky play, barns medvirkning, children's participation, samlingsstund, outdoor play]
+    clusters: [37, 126]
+  - id: T30
+    macro: M4
+    label_nb: Barnehagelærerprofesjonen, ledelse og kompetanse i barnehagen
+    label_en: The ECEC teacher profession, leadership and competence
+    definition_nb: Barnehagelæreres profesjonsidentitet, pedagogisk ledelse, kompetanseutvikling og master i barnehagen, rekruttering, språkmiljø.
+    definition_en: ECEC teachers' professional identity, pedagogical leadership, competence development, recruitment, language environments.
+    keywords: [barnehagelærer, pedagogisk ledelse, barnehagelærerutdanning, ECEC teachers, kompetanseutvikling barnehage, rekruttering]
+    clusters: [48, 49]
+  - id: T31
+    macro: M4
+    label_nb: Barns hverdagsliv, mangfold og barndomsstudier
+    label_en: Children's everyday lives, diversity and childhood studies
+    definition_nb: Barns hverdagsliv i barnehage og familie, kulturelt mangfold, norskhet, barns medborgerskap, barndomssosiologi, åpen barnehage.
+    definition_en: Children's everyday lives in ECEC and families, cultural diversity, Norwegianness, children's citizenship, sociology of childhood.
+    keywords: [barns hverdagsliv, childhood studies, mangfold barnehage, diversity ECEC, barns medborgerskap, kindergarten ethnography]
+    clusters: [94, 44]
+  - id: T32
+    macro: M4
+    label_nb: Musikk, sang og estetikk i barnehagen
+    label_en: Music, singing and aesthetics in ECEC
+    definition_nb: Sang som språkstimulering, inkluderende musikkpraksis, musikalsk lek, estetiske samtaler med små barn.
+    definition_en: Singing for language stimulation, inclusive music practices, musical play, aesthetic conversations with young children.
+    keywords: [sang, musikk barnehage, music ECEC, musical play, språkstimulering, estetikk barnehage]
+    clusters: [1]
+  - id: T33
+    macro: M4
+    label_nb: Posthumanistiske og materielle perspektiver på pedagogikk
+    label_en: Posthuman and new-materialist perspectives on education
+    definition_nb: Intra-aksjon, diffraksjon, materialitet, affekt og mer-enn-menneskelige perspektiver i barnehage- og utdanningsforskning.
+    definition_en: Intra-action, diffraction, materiality, affect and more-than-human perspectives in ECEC and education research.
+    keywords: [posthumanism, new materialism, Barad, Deleuze, intra-action, materiality, affect, more-than-human]
+    clusters: [100]
+  - id: T34
+    macro: M4
+    label_nb: Overgang barnehage–skole og begynneropplæring
+    label_en: Transition to school and early years teaching
+    definition_nb: Skolestart, seksårsreformen, fleksibel skolestart, sammenheng barnehage–skole–SFO, første klasse.
+    definition_en: School start, the six-year-old reform, flexible school start, continuity ECEC–school–after-school care, first grade.
+    keywords: [skolestart, overgang barnehage skole, begynneropplæring, seksårsreformen, førsteklasse, transition to school]
+    clusters: [51]
+  - id: T35
+    macro: M4
+    label_nb: Utsatte barn, barnevern og foreldresamarbeid
+    label_en: Vulnerable children, child welfare and parent collaboration
+    definition_nb: Barn i sårbare livssituasjoner, vold og overgrep, barnevern, tverretatlig samarbeid, samarbeid med minoritetsforeldre, barns rettigheter.
+    definition_en: Children in vulnerable situations, violence and abuse, child welfare, inter-agency collaboration, minority parents, children's rights.
+    keywords: [barnevern, child welfare, vold mot barn, utsatte barn, foreldresamarbeid, barns rettigheter, tidlig innsats]
+    clusters: [11]
+
+  # ---------------- M5 Lærerutdanning, skoleutvikling, ledelse og styring
+  - id: T36
+    macro: M5
+    label_nb: Praksis, veiledning og partnerskap i lærerutdanningen
+    label_en: Practicum, mentoring and school–university partnerships
+    definition_nb: Praksisopplæring, praksislærere, lærerutdanningsskoler, sammenheng teori–praksis, studentenes erfaringer.
+    definition_en: School placement, mentor teachers, partnership schools, theory–practice coherence, student teachers' experiences.
+    keywords: [praksis lærerutdanning, praksislærer, partnerskap, mentoring, school placement, lærerutdanningsskoler, veiledning]
+    clusters: [35]
+  - id: T37
+    macro: M5
+    label_nb: Forskningsbasert lærerutdanning og lærerutdannere
+    label_en: Research-based teacher education and teacher educators
+    definition_nb: Lærerutdanneres forståelser og kompetanse, forskningsbasert utdanning, masteroppgaver og profesjonsrelevans, lærerutdanningens innhold.
+    definition_en: Teacher educators' understandings and competence, research-based teacher education, master's theses and professional relevance.
+    keywords: [forskningsbasert lærerutdanning, research-based teacher education, teacher educators, lærerutdannere, masteroppgave, profesjonsrelevans]
+    clusters: [99]
+  - id: T38
+    macro: M5
+    label_nb: Læreres profesjonelle læring og skoleutvikling
+    label_en: Teachers' professional learning and school development
+    definition_nb: Kompetanseutvikling i skolen, profesjonelle læringsfellesskap, skoleutvikling, lærersamarbeid, lærerrollen i endring.
+    definition_en: Teacher professional development, professional learning communities, school improvement, teacher collaboration, changing teacher roles.
+    keywords: [skoleutvikling, professional development, profesjonelle læringsfellesskap, lærersamarbeid, school improvement, kompetanseutvikling skole]
+    clusters: [82, 101, 59, 80]
+  - id: T39
+    macro: M5
+    label_nb: Skoleledelse og rektorutdanning
+    label_en: School leadership and principal education
+    definition_nb: Rektorers og skolelederes ledelsespraksis, den nasjonale rektorutdanningen, distribuert ledelse, lederlæring, skoleeiere og skolesjefer.
+    definition_en: Principals' leadership practice, national principal education, distributed leadership, leadership learning, superintendents.
+    keywords: [skoleledelse, school leadership, rektorutdanning, principals, instructional leadership, superintendents, lederutvikling]
+    clusters: [141]
+  - id: T40
+    macro: M5
+    label_nb: Utdanningsstyring, ansvarliggjøring og skoleeiere
+    label_en: Education governance, accountability and school owners
+    definition_nb: Styring av skolen, new public management, tilsyn, skolestyrer, Spørsmål til Skole-Norge, utdanningspolitikk.
+    definition_en: Governance of schooling, new public management, inspection, school boards, national school-owner surveys, education policy.
+    keywords: [utdanningsstyring, governance, accountability, ansvarliggjøring, skoleeier, school boards, inspection, NPM, utdanningspolitikk]
+    clusters: [120, 128, 55]
+  - id: T41
+    macro: M5
+    label_nb: Vurdering, prøver og storskalaundersøkelser
+    label_en: Assessment, testing and large-scale studies
+    definition_nb: Vurdering for læring, nasjonale prøver, PISA/TIMSS/PIRLS, kjønnsforskjeller og ulikhet i prestasjoner, psykometri.
+    definition_en: Assessment for learning, national tests, PISA/TIMSS/PIRLS, gender gaps and inequality in achievement, psychometrics.
+    keywords: [vurdering, assessment, nasjonale prøver, PISA, TIMSS, large-scale assessment, kjønnsforskjeller, ulikhet]
+    clusters: [139, 67]
+  - id: T42
+    macro: M5
+    label_nb: Læreres trivsel, motivasjon og klasseledelse
+    label_en: Teacher well-being, motivation and classroom management
+    definition_nb: Læreres jobbtilfredshet og mestringstro, nyutdannede lærere, lærerstudenters resiliens, klasseledelse og relasjonskompetanse.
+    definition_en: Teacher job satisfaction and efficacy, newly qualified teachers, student teacher resilience, classroom management and relational competence.
+    keywords: [teacher well-being, lærertrivsel, job satisfaction, teacher efficacy, klasseledelse, classroom management, nyutdannede lærere]
+    clusters: [40]
+  - id: T43
+    macro: M5
+    label_nb: Aksjonsforskning og praksisnær forskning
+    label_en: Action research and practice-based research
+    definition_nb: Pedagogisk aksjonsforskning, forskning i samhandling med skoler, bedrifter og kommuner, forskningsetikk og metodologi.
+    definition_en: Educational action research, research in collaboration with schools, firms and municipalities, research ethics and methodology.
+    keywords: [aksjonsforskning, action research, practitioner research, praksisnær forskning, forskningsmetode, forskningsetikk]
+    clusters: [64, 69]
+  - id: T44
+    macro: M5
+    label_nb: Internasjonalisering av lærerutdanning og lærermobilitet
+    label_en: Internationalisation of teacher education and teacher mobility
+    definition_nb: Studentutveksling, internasjonal praksis, innvandrede læreres rekvalifisering, kompetanseutvikling gjennom mobilitet.
+    definition_en: Student exchange, international practicum, requalification of immigrant teachers, professional development through mobility.
+    keywords: [internasjonalisering, internationalisation, student exchange, international practicum, immigrant teachers, requalification]
+    clusters: [36]
+  - id: T45
+    macro: M5
+    label_nb: Kritisk tenkning, argumentasjon og dybdelæring
+    label_en: Critical thinking, argumentation and deep learning
+    definition_nb: Kritisk tenkning og argumentasjon hos barn, elever og lærerstudenter, resonnering og dialog, dybdelæring, fagovergripende kompetanser og tverrfaglige temaer i LK20.
+    definition_en: Critical thinking and argumentation among children, pupils and student teachers, reasoning and dialogue, deep learning, cross-curricular competences and interdisciplinary themes.
+    keywords: [kritisk tenkning, critical thinking, argumentasjon, argumentation, argumentative competence, reasoning, dybdelæring, deep learning, tverrfaglig, fagovergripende kompetanser, LK20]
+    clusters: [23, 60]
+  - id: T46
+    macro: M5
+    label_nb: Uteskole og læring utenfor klasserommet
+    label_en: Outdoor education and learning outside the classroom
+    definition_nb: Uteskole, friluftsliv, naturkontakt, undervisning utenfor klasserommet, pragmatistiske perspektiver på erfaringslæring.
+    definition_en: Outdoor schooling, friluftsliv, connection to nature, teaching outside the classroom, pragmatist perspectives on experiential learning.
+    keywords: [uteskole, outdoor education, friluftsliv, nature connection, læring utenfor klasserommet]
+    clusters: [118]
+  - id: T47
+    macro: M5
+    label_nb: Pedagogisk filosofi, danning og etikk
+    label_en: Philosophy of education, Bildung and ethics
+    definition_nb: Danningsteori, eksistensiell og kritisk danning, forskningsetikk, hermeneutikk, Arendt, Ricoeur, profesjonsetikk.
+    definition_en: Bildung theory, existential and critical Bildung, research ethics, hermeneutics, Arendt, Ricoeur, professional ethics.
+    keywords: [danning, Bildung, pedagogisk filosofi, philosophy of education, etikk, hermeneutikk, Arendt]
+    clusters: [25, 144]
+  - id: T48
+    macro: M5
+    label_nb: Utdanningshistorie og læreplanforskning
+    label_en: History of education and curriculum studies
+    definition_nb: Læreplanhistorie, livsmestring i læreplaner, skolens historie, læreplananalyse, pedagogikkfagets historie.
+    definition_en: Curriculum history, life mastery in curricula, history of schooling, curriculum analysis, history of pedagogy as a discipline.
+    keywords: [utdanningshistorie, history of education, læreplan, curriculum, læreplanforskning, livsmestring, læreplananalyse]
+    clusters: []
+
+  # ---------------- M6 Mangfold, inkludering og spesialpedagogikk
+  - id: T49
+    macro: M6
+    label_nb: Spesialpedagogikk, lærevansker og tilpasset opplæring
+    label_en: Special needs education, learning difficulties and adapted education
+    definition_nb: Kartlegging av lærevansker, spesialundervisning, tilpasset og inkluderende opplæring, PP-tjenesten, den spesialpedagogiske tiltakskjeden.
+    definition_en: Assessment of learning difficulties, special education, adapted and inclusive education, educational-psychological services.
+    keywords: [spesialpedagogikk, special needs education, lærevansker, tilpasset opplæring, inkluderende opplæring, PP-tjenesten, inclusion]
+    clusters: [130, 135]
+  - id: T50
+    macro: M6
+    label_nb: Utviklingshemming, kommunikasjon og deltakelse
+    label_en: Intellectual disability, communication and participation
+    definition_nb: Personer med utviklingshemming og dyp flerfunksjonshemming, kroppslig kommunikasjon, autisme, opplæring og deltakelse.
+    definition_en: People with intellectual and profound multiple disabilities, embodied communication, autism, education and participation.
+    keywords: [utviklingshemming, intellectual disability, profound multiple disabilities, autisme, embodied communication, deltakelse]
+    clusters: [5, 127]
+  - id: T51
+    macro: M6
+    label_nb: Flerkulturell pedagogikk og interkulturell kompetanse
+    label_en: Multicultural education and intercultural competence
+    definition_nb: Mangfoldskompetanse i lærerutdanning, interkulturell kommunikasjon, flerkulturelle perspektiver i fag, identitetsarbeid med elever.
+    definition_en: Diversity competence in teacher education, intercultural communication, multicultural perspectives in subjects, identity work with pupils.
+    keywords: [flerkulturell pedagogikk, multicultural education, interkulturell kompetanse, intercultural competence, mangfold, diversity competence]
+    clusters: [143, 8]
+  - id: T52
+    macro: M6
+    label_nb: Rasisme, hatytringer og minoriteter i Norge
+    label_en: Racism, hate speech and minorities in Norway
+    definition_nb: Rasisme og antisemittisme i skole og akademia, hatefulle ytringer, muslimer i Norge, radikalisering, stereotypier.
+    definition_en: Racism and antisemitism in school and academia, hate speech, Muslims in Norway, radicalisation, stereotypes.
+    keywords: [rasisme, racism, antisemittisme, hatytringer, hate speech, islamofobi, radicalisation, minoriteter]
+    clusters: [134]
+  - id: T53
+    macro: M6
+    label_nb: Kjønn, religion og identitet
+    label_en: Gender, religion and identity
+    definition_nb: Muslimske kvinner, idrett og religiøsitet, kjønn og medborgerskap, kvinnebevegelser, interseksjonalitet, skeive perspektiver.
+    definition_en: Muslim women, sport and religiosity, gender and citizenship, women's movements, intersectionality, queer perspectives.
+    keywords: [kjønn, gender, religiosity, Muslim women, intersectionality, women's movements, skeiv, queer]
+    clusters: [125, 31]
+  - id: T54
+    macro: M6
+    label_nb: Traumer, kriser og psykososial støtte i skolen
+    label_en: Trauma, crises and psychosocial support in school
+    definition_nb: Elevers skolefungering etter traumer og terror (Utøya), flyktningbarn i krig og konflikt, psykososial støtte, utdanning i kriser.
+    definition_en: School functioning after trauma and terror, refugee children in war and conflict, psychosocial support, education in emergencies.
+    keywords: [traumer, trauma, psychosocial support, Utøya, refugee children, education in emergencies, PTSD]
+    clusters: [142]
+  - id: T55
+    macro: M6
+    label_nb: Nyankomne, flyktninger og integrering
+    label_en: Newcomers, refugees and integration
+    definition_nb: Nyankomne elever, flyktningers møte med skole og tjenester, integrering gjennom utdanning og arbeid, psykososialt arbeid med flyktninger.
+    definition_en: Newly arrived pupils, refugees' encounters with school and services, integration through education and work, psychosocial work with refugees.
+    keywords: [nyankomne elever, flyktninger, refugees, integrering, integration, asylsøkere, innvandrere]
+    clusters: [29]
+
+  # ---------------- M7 Estetiske fag, kropp og helse
+  - id: T56
+    macro: M7
+    label_nb: Kroppsøving og kroppsøvingslærerutdanning
+    label_en: Physical education and PE teacher education
+    definition_nb: Kroppsøvingsfaget etter fagfornyelsen, øvingsmodellen, kroppslig læring og fenomenologi, bevegelsesglede, dans, kroppsøvingslæreres praksis.
+    definition_en: Physical education after curriculum reform, the practising model, embodied learning and phenomenology, movement, dance, PE teachers' practice.
+    keywords: [kroppsøving, physical education, PETE, embodiment, practising model, movement capability, dans, physical literacy]
+    clusters: [3, 97, 6, 28]
+  - id: T57
+    macro: M7
+    label_nb: Fysisk aktivitet, folkehelse og SFO
+    label_en: Physical activity, public health and after-school care
+    definition_nb: Fysisk aktivitet og helse hos barn og unge, overvekt, intervensjoner i SFO, folkehelsearbeid, kosthold, helsefremmende skoler.
+    definition_en: Physical activity and health in children and youth, overweight, after-school interventions, public health work, nutrition, health-promoting schools.
+    keywords: [fysisk aktivitet, physical activity, folkehelse, public health, overvekt, SFO, after-school programme, helsefremmende]
+    clusters: [65, 113, 106, 58]
+  - id: T58
+    macro: M7
+    label_nb: Musikkpedagogikk og musikk i samfunnet
+    label_en: Music education and music in society
+    definition_nb: Musikkundervisning og musikklærerutdanning, musikk i flerkulturelle fellesskap, etnomusikologi, musikkterapi, relasjonell estetikk.
+    definition_en: Music teaching and music teacher education, music in multicultural communities, ethnomusicology, music therapy, relational aesthetics.
+    keywords: [musikkpedagogikk, music education, music teacher, ethnomusicology, musikkterapi, music therapy, musikk og inkludering]
+    clusters: [53]
+  - id: T59
+    macro: M7
+    label_nb: Drama, teater og dramaturgi i undervisning
+    label_en: Drama, theatre and dramaturgy in teaching
+    definition_nb: Drama som læringsform, prosessdrama, forumteater, dramaturgiske perspektiver på undervisning, storyline.
+    definition_en: Drama as a mode of learning, process drama, forum theatre, dramaturgical perspectives on teaching, storyline.
+    keywords: [drama, process drama, forum theatre, dramaturgi, teater, applied drama, storyline]
+    clusters: []
+  - id: T60
+    macro: M7
+    label_nb: Kunst og håndverk, design og estetiske læreprosesser
+    label_en: Arts and crafts, design and aesthetic learning processes
+    definition_nb: Kunst og håndverk i skole og lærerutdanning, materialer og skapende prosesser, estetiske læreprosesser, visuell kultur.
+    definition_en: Arts and crafts in school and teacher education, materials and creative processes, aesthetic learning processes, visual culture.
+    keywords: [kunst og håndverk, arts and crafts, estetiske læreprosesser, aesthetic learning, design, visuell kultur, tegning]
+    clusters: []
+  - id: T61
+    macro: M7
+    label_nb: Aldring, omsorgstjenester og velferd
+    label_en: Ageing, care services and welfare
+    definition_nb: Eldreomsorg, hverdagsrehabilitering, frivillighet og helse, velferdsstatens tjenester, sykepleiepraksis i kommunene.
+    definition_en: Elder care, reablement, volunteering and health, welfare state services, nursing practice in municipalities.
+    keywords: [eldreomsorg, ageing, reablement, home care, civic engagement, velferdstjenester, older adults]
+    clusters: [149, 132]
+
+  # ---------------- M8 Samfunn, demokrati, religion og bærekraft
+  - id: T62
+    macro: M8
+    label_nb: Demokrati, medborgerskap og kontroversielle tema
+    label_en: Democracy, citizenship education and controversial issues
+    definition_nb: Demokratiopplæring, medborgerskap i flerkulturelle skoler, politisk mestringstro, kontroversielle spørsmål, likhet og utdanningspolitikk i Norden.
+    definition_en: Democratic education, citizenship in multicultural schools, political efficacy, controversial issues, equity and Nordic education policy.
+    keywords: [demokrati, medborgerskap, citizenship education, democracy education, kontroversielle tema, controversial issues, political efficacy]
+    clusters: [47, 112]
+  - id: T63
+    macro: M8
+    label_nb: Religions- og livssynsdidaktikk (KRLE)
+    label_en: Religious education (KRLE) didactics
+    definition_nb: Undervisning i religion, livssyn og etikk, religionskritikk, fortelling i RLE, gudstjenester i skoletiden, lærebøker i KRLE, digitale verktøy i religionsfaget.
+    definition_en: Teaching religion, worldviews and ethics, criticism of religion, narrative in RE, school worship, RE textbooks, digital tools in RE.
+    keywords: [KRLE, religionsdidaktikk, religious education, livssyn, religionsundervisning, RLE, religion og etikk]
+    clusters: [91]
+  - id: T64
+    macro: M8
+    label_nb: Religionsvitenskap, teologi og humanisme
+    label_en: Religious studies, theology and humanism
+    definition_nb: Jødedom og kristendom, bibelvitenskap, antisemittisme i religionshistorien, humanismens idéhistorie, religionssosiologi.
+    definition_en: Judaism and Christianity, biblical studies, antisemitism in religious history, the intellectual history of humanism, sociology of religion.
+    keywords: [teologi, theology, jødedom, Judaism, kristendom, bibelvitenskap, humanisme, humanism, religionssosiologi]
+    clusters: [111]
+  - id: T65
+    macro: M8
+    label_nb: Samfunnsfag- og historiedidaktikk
+    label_en: Social studies and history education
+    definition_nb: Samfunnsfaget i skolen, historiedidaktikk og historiebevissthet, elevsamtalen, sosial utjevning, kunnskapsintegrasjon i lærerutdanning.
+    definition_en: Social studies in school, history education and historical consciousness, student dialogue, social equalisation, knowledge integration in teacher education.
+    keywords: [samfunnsfag, samfunnsfagdidaktikk, historiedidaktikk, history education, social studies, historiebevissthet]
+    clusters: [4]
+  - id: T66
+    macro: M8
+    label_nb: Bærekraft, klima og miljørettferdighet i utdanning
+    label_en: Sustainability, climate and environmental justice in education
+    definition_nb: Utdanning for bærekraftig utvikling, klimaundervisning, miljørettferdighet, politisk økologi i utdanning, håp og handling.
+    definition_en: Education for sustainable development, climate education, environmental justice, political ecology in education, hope and action.
+    keywords: [bærekraft, sustainability education, klimaundervisning, climate education, ESD, environmental justice, UBU]
+    clusters: [74]
+  - id: T67
+    macro: M8
+    label_nb: Litteratur, kulturarv og idéhistorie
+    label_en: Literature, cultural heritage and history of ideas
+    definition_nb: Litteraturvitenskap (Ibsen, Milton, Dylan), filosofi og idéhistorie, kulturarv, kulturforståelse, festskrift og bokomtaler i humaniora.
+    definition_en: Literary studies, philosophy and history of ideas, cultural heritage, cultural understanding, humanities reviews and Festschriften.
+    keywords: [litteraturvitenskap, literary studies, idéhistorie, kulturarv, cultural heritage, Ibsen, filosofi, humaniora]
+    clusters: [41, 18]
+
+  # ---------------- M9 Internasjonale studier, utvikling og tolking
+  - id: T68
+    macro: M9
+    label_nb: Tolking i offentlig sektor og tolkeutdanning
+    label_en: Public service interpreting and interpreter education
+    definition_nb: Tolking i offentlig sektor, tolkeloven, tolkens rolle, fjerntolking, prima vista, tolkeutdanning på nett, kommunikasjon via tolk.
+    definition_en: Public service interpreting, the Interpreting Act, the interpreter's role, remote interpreting, sight translation, online interpreter training.
+    keywords: [tolking, interpreting, public service interpreting, tolkeutdanning, interpreter training, fjerntolking, tolkeloven]
+    clusters: [147, 105]
+  - id: T69
+    macro: M9
+    label_nb: Utdanning og utvikling i det globale sør
+    label_en: Education and development in the Global South
+    definition_nb: Utdanningsbistand, lærere og skoler i Afrika sør for Sahara (Sudan, Sør-Sudan, Zambia, Malawi, Sør-Afrika), HIV/AIDS og utdanning, NORAD-evalueringer.
+    definition_en: Education aid, teachers and schools in sub-Saharan Africa, HIV/AIDS and education, NORAD evaluations, education in conflict.
+    keywords: [education and development, Global South, Africa, Sudan, Zambia, South Africa, HIV/AIDS education, utdanningsbistand, NORAD]
+    clusters: [137, 45, 122]
+  - id: T70
+    macro: M9
+    label_nb: Politisk antropologi, konflikt og radikalisering
+    label_en: Political anthropology, conflict and radicalisation
+    definition_nb: Etnografisk forskning på politikk, klientelisme, religiøs nasjonalisme, radikalisering og voldelig ekstremisme, Midtøsten, India, Mexico.
+    definition_en: Ethnographic research on politics, clientelism, religious nationalism, radicalisation and violent extremism, Middle East, India, Mexico.
+    keywords: [political anthropology, etnografi, clientelism, radicalisation, violent extremism, Middle East, India, Mexico]
+    clusters: [83, 86]
+  - id: T71
+    macro: M9
+    label_nb: Urfolk, dekolonialitet og kunnskapssystemer
+    label_en: Indigenous peoples, decoloniality and knowledge systems
+    definition_nb: Urfolks kunnskap, dekoloniale forskningspraksiser, naturvern og lokalsamfunn i Afrika, kjønn og likestilling i Malawi.
+    definition_en: Indigenous knowledge, decolonial research practices, conservation and communities in Africa, gender equity in Malawi.
+    keywords: [indigenous knowledge, decolonial, urfolk, dekolonialitet, conservation, Malawi, San, ethics of care]
+    clusters: [146, 0]
+  - id: T72
+    macro: M9
+    label_nb: Politisk økologi, vann og naturens rettigheter
+    label_en: Political ecology, water and rights of nature
+    definition_nb: Vannforvaltning i Andes, elvers rettigheter, miljøkonstitusjonalisme, mer-enn-menneskelige allmenninger, globale miljødiskurser.
+    definition_en: Water management in the Andes, riverine rights, environmental constitutionalism, more-than-human commons, global environmental discourses.
+    keywords: [political ecology, water, riverine rights, Peru, environmental constitutionalism, commons, naturens rettigheter]
+    clusters: [54, 76, 131]
+  - id: T73
+    macro: M9
+    label_nb: Komparativ utdanning og verdenssystemanalyse
+    label_en: Comparative education and world-systems analysis
+    definition_nb: Internasjonal og komparativ pedagogikk, verdenssystemteori og læreplan, utdanningens globale arkitektur, nordiske stemmer.
+    definition_en: International and comparative education, world-systems analysis and curriculum, the global architecture of education, Nordic perspectives.
+    keywords: [comparative education, komparativ pedagogikk, world-systems analysis, global governance of education, international education]
+    clusters: [115, 50, 27, 123]
+
+  # ---------------- M10 Yrkesfag, arbeidsliv og voksnes læring
+  - id: T74
+    macro: M10
+    label_nb: Yrkesdidaktikk og yrkesfaglærerutdanning
+    label_en: Vocational didactics and vocational teacher education
+    definition_nb: Yrkesfaglæreres kompetanse og utdanning, yrkesrelevant og meningsfull opplæring, yrkespedagogikk, restaurant- og matfag, yrkesdifferensiering.
+    definition_en: Vocational teachers' competence and education, relevant and meaningful vocational training, vocational pedagogy, restaurant and food subjects.
+    keywords: [yrkesdidaktikk, yrkesfaglærerutdanning, vocational teacher education, yrkespedagogikk, vocational didactics, restaurant- og matfag]
+    clusters: [129, 110, 46, 90]
+  - id: T75
+    macro: M10
+    label_nb: Fag- og yrkesopplæring, lærlinger og frafall
+    label_en: VET systems, apprenticeships and dropout
+    definition_nb: Overgang skole–lærebedrift, lærekontrakter og frafall (Norge/Sveits), samarbeid skole–arbeidsliv, VET-politikk og reformer.
+    definition_en: School-to-apprenticeship transition, contract termination and dropout (Norway/Switzerland), school–workplace collaboration, VET policy and reform.
+    keywords: [fag- og yrkesopplæring, VET, apprenticeship, lærlinger, frafall, dropout, Lehrvertragsauflösung, school-to-work transition]
+    clusters: [38, 24, 66, 121]
+  - id: T76
+    macro: M10
+    label_nb: Arbeidsplasslæring, livslang læring og medarbeiderdrevet innovasjon
+    label_en: Workplace learning, lifelong learning and employee-driven innovation
+    definition_nb: Læring i arbeidslivet, simulatortrening, medarbeiderdrevet innovasjon, voksnes læring, kompetanseutvikling i helse- og omsorgstjenester.
+    definition_en: Learning in working life, simulator training, employee-driven innovation, adult learning, competence development in health and care services.
+    keywords: [workplace learning, arbeidsplasslæring, lifelong learning, livslang læring, medarbeiderdrevet innovasjon, voksnes læring, simulator training]
+    clusters: [33, 13, 103]
+  - id: T77
+    macro: M10
+    label_nb: Tverrprofesjonelt samarbeid og profesjonskvalifisering
+    label_en: Interprofessional collaboration and professional qualification
+    definition_nb: Tverrprofesjonell læring og samarbeid i velferdstjenestene, profesjonskvalifisering, høgskolepedagogikk og prosjektrapporter fra utviklingsarbeid.
+    definition_en: Interprofessional learning and collaboration in welfare services, professional qualification, higher education pedagogy, development project reports.
+    keywords: [tverrprofesjonelt samarbeid, interprofessional education, profesjonskvalifisering, høgskolepedagogikk, utviklingsprosjekt]
+    clusters: [19]
+  - id: T78
+    macro: M10
+    label_nb: Karriereveiledning og voksnes utdanningsvalg
+    label_en: Career guidance and adults' educational choices
+    definition_nb: Karriereveiledning og karrierelæring, NAV og arbeidsinkludering, voksnes utdanningsvalg, veiledning av voksne.
+    definition_en: Career guidance and career learning, labour-market inclusion, adults' educational choices, counselling adults.
+    keywords: [karriereveiledning, career guidance, career counselling, karrierelæring, arbeidsinkludering, voksenopplæring]
+    clusters: []

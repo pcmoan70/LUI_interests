@@ -1,0 +1,13 @@
+[project]
+name = "lui"
+version = "0.1.0"
+description = "Research-interest map for OsloMet LUI"
+requires-python = ">=3.12"
+dependencies = ["httpx", "beautifulsoup4", "lxml", "pandas", "networkx", "scikit-learn", "rapidfuzz", "pymupdf", "pyyaml"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]

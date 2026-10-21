@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LUI forskningskart</title>
+<meta name="description" content="Forskningsinteresser, samarbeid og siteringer ved Fakultet for lærerutdanning og internasjonale studier (OsloMet)">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27%3E%3Ccircle cx=%275%27 cy=%275%27 r=%273%27 fill=%27%230d5c8a%27/%3E%3Ccircle cx=%2711%27 cy=%2711%27 r=%273%27 fill=%27%23c75b12%27/%3E%3Cpath d=%27M5 5L11 11%27 stroke=%27%23999%27/%3E%3C/svg%3E">
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/minisearch@7.1.0/dist/umd/index.min.js"></script>
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="#/">LUI <span>forskningskart</span></a>
+  <nav>
+    <a href="#/">Utforsk</a>
+    <a href="#/matrix">Interessematrise</a>
+    <a href="#/relmatrix">Relasjonsmatrise</a>
+    <a href="#/graph">Graf</a>
+    <a href="#/topics">Tema</a>
+    <a href="#/score">Finn samarbeid</a>
+    <a href="#/about">Om</a>
+  </nav>
+  <button class="print" onclick="window.print()" title="Skriv ut / lagre som PDF">PDF</button>
+</header>
+<main id="app"><p class="muted">Laster data …</p></main>
+<footer class="foot">
+  <span id="meta"></span> · Kilder: oslomet.no, Cristin, Nasjonalt vitenarkiv (NVA), OpenAlex. Kun offentlige data; kontakt prosjekteier for retting eller reservasjon.
+</footer>
+<script type="module" src="app.js"></script>
+</body>
+</html>

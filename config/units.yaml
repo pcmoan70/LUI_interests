@@ -1,0 +1,12 @@
+# Cristin unit ids for LUI (institution 215). name_nb/name_en from NVA organization endpoint.
+institution: "215"
+faculty: "215.4.0.0"
+units:
+  "215.4.0.0": {short: LUI,   name_nb: "Fakultet for lærerutdanning og internasjonale studier", name_en: "Faculty of Education and International Studies", parent: "215.0.0.0"}
+  "215.4.1.0": {short: FADM,  name_nb: "Fakultetsadministrasjonen", name_en: "Faculty administration", parent: "215.4.0.0"}
+  "215.4.2.0": {short: BLU,   name_nb: "Institutt for barnehagelærerutdanning", name_en: "Department of Early Childhood Education", parent: "215.4.0.0"}
+  "215.4.3.0": {short: GFU,   name_nb: "Institutt for grunnskole- og faglærerutdanning", name_en: "Department of Primary and Secondary Teacher Education", parent: "215.4.0.0"}
+  "215.4.4.0": {short: IST,   name_nb: "Institutt for internasjonale studier og tolkeutdanning", name_en: "Department of International Studies and Interpreting", parent: "215.4.0.0"}
+  "215.4.5.0": {short: YLU,   name_nb: "Institutt for yrkesfaglærerutdanning", name_en: "Department of Vocational Teacher Education", parent: "215.4.0.0"}
+  "215.4.6.0": {short: TIME,  name_nb: "Timelønnede LUI", name_en: "Hourly staff LUI", parent: "215.4.0.0"}
+  "215.4.7.0": {short: NAFO,  name_nb: "Nasjonalt senter for flerkulturell opplæring - NAFO", name_en: "National Centre for Multicultural Education (NAFO)", parent: "215.4.0.0"}

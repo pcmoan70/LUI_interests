@@ -1,0 +1,190 @@
+# Controlled vocabulary of theoretical frameworks. `patterns` are case-insensitive regexes
+# matched against title + abstract + intro + conclusion. Keep patterns specific (named theories,
+# theorists, technical terms) to avoid false positives.
+theories:
+  - id: sociocultural
+    label: Sociocultural / Vygotskian theory
+    patterns: ["sociocultural", "sosiokulturell", "vygotsk", "zone of proximal", "scaffold", "mediated action", "cultural[- ]historical"]
+  - id: activity_theory
+    label: Activity theory / CHAT
+    patterns: ["activity theory", "aktivitetsteori", "engestr[öo]m", "expansive learning"]
+  - id: bourdieu
+    label: Bourdieu (capital, habitus, field)
+    patterns: ["bourdieu", "habitus", "cultural capital", "kulturell kapital", "symbolic violence", "symbolsk vold"]
+  - id: bernstein
+    label: Bernstein (pedagogic discourse, recontextualisation)
+    patterns: ["bernstein", "pedagogic discourse", "recontextuali[sz]", "rekontekstualiser"]
+  - id: foucault
+    label: Foucault / governmentality / discourse
+    patterns: ["foucault", "governmentalit", "disciplinary power", "styringsrasjonalitet", "biopolit"]
+  - id: critical_pedagogy
+    label: Critical pedagogy / Freire
+    patterns: ["critical pedagog", "kritisk pedagogikk", "freire", "conscienti[sz]ation", "emancipat", "frigjørende"]
+  - id: critical_race
+    label: Critical race theory / whiteness / decolonial
+    patterns: ["critical race", "whiteness", "hvithet", "decoloni", "dekoloni", "postcoloni", "postkoloni", "racialis", "rasialiser"]
+  - id: intersectionality
+    label: Intersectionality
+    patterns: ["intersectional", "interseksjonal"]
+  - id: feminist_gender
+    label: Feminist / gender theory
+    patterns: ["feminist", "feministisk", "gender theory", "kjønnsteori", "doing gender", "judith butler", "gender performativity"]
+  - id: bildung_didaktik
+    label: Bildung / Didaktik tradition
+    patterns: ["\\bbildung\\b", "\\bdanning(s\\w+)?\\b", "\\bdanninga?\\b", "klafki", "didaktisk relasjonsmodell", "allgemeine didaktik", "kategorial"]
+  - id: biesta
+    label: Biesta (subjectification, qualification, socialisation)
+    patterns: ["biesta", "subjectification", "subjektivering", "qualification, socialisation"]
+  - id: dewey_pragmatism
+    label: Dewey / pragmatism
+    patterns: ["dewey", "pragmatis", "experiential learning", "erfaringslæring", "inquiry-based"]
+  - id: phenomenology
+    label: Phenomenology / lifeworld
+    patterns: ["phenomenolog", "fenomenolog", "lifeworld", "livsverden", "merleau[- ]ponty", "husserl", "heidegger", "embodied experience", "kroppslig erfaring"]
+  - id: hermeneutics
+    label: Hermeneutics
+    patterns: ["hermeneut", "gadamer", "ricoeur"]
+  - id: posthumanism
+    label: Posthumanism / new materialism
+    patterns: ["posthuman", "new materialis", "nymaterialis", "barad", "haraway", "intra-action", "agential realism", "more-than-human", "deleuz", "assemblage"]
+  - id: sociomaterial
+    label: Sociomaterial / actor-network theory
+    patterns: ["sociomaterial", "sosiomateriell", "actor[- ]network", "aktør-nettverk", "latour", "\\bANT\\b"]
+  - id: ecological_bronfenbrenner
+    label: Ecological systems theory
+    patterns: ["bronfenbrenner", "ecological systems", "økologisk(e)? (system|modell)", "bioecological"]
+  - id: attachment
+    label: Attachment theory
+    patterns: ["attachment theory", "tilknytningsteori", "bowlby", "ainsworth", "secure base"]
+  - id: self_determination
+    label: Self-determination theory / motivation
+    patterns: ["self-determination", "selvbestemmelsesteori", "deci and ryan", "intrinsic motivation", "indre motivasjon", "expectancy[- ]value", "achievement goal"]
+  - id: self_efficacy
+    label: Self-efficacy / social cognitive theory
+    patterns: ["self-efficacy", "mestringsforventning", "bandura", "social cognitive theory"]
+  - id: cognitive_load
+    label: Cognitive load / information processing
+    patterns: ["cognitive load", "kognitiv belastning", "working memory", "arbeidsminne", "dual coding"]
+  - id: constructivism
+    label: Constructivism / Piaget
+    patterns: ["constructivis", "konstruktivis", "piaget", "conceptual change"]
+  - id: variation_theory
+    label: Variation theory / phenomenography
+    patterns: ["variation theory", "variasjonsteori", "phenomenograph", "fenomenograf", "learning study", "marton"]
+  - id: realistic_math
+    label: Realistic Mathematics Education / Freudenthal
+    patterns: ["realistic mathematics", "freudenthal", "emergent model", "guided reinvention"]
+  - id: ethnomath_culturally_responsive
+    label: Culturally responsive / sustaining pedagogy
+    patterns: ["culturally (responsive|relevant|sustaining)", "kulturelt responsiv", "ethnomathemat", "funds of knowledge"]
+  - id: translanguaging
+    label: Translanguaging / multilingual turn
+    patterns: ["translanguag", "transspråk", "multilingual turn", "heteroglossi", "language ideolog", "språkideolog", "garc[ií]a and wei"]
+  - id: sfl_genre
+    label: Systemic functional linguistics / genre pedagogy
+    patterns: ["systemic functional", "systemisk[- ]funksjonell", "halliday", "genre pedagog", "sjangerpedagog", "appraisal theory", "register theory"]
+  - id: sociolinguistics_variation
+    label: Sociolinguistics / language variation
+    patterns: ["sociolinguistic", "sosiolingvist", "language variation", "språklig variasjon", "dialect", "dialekt", "labov"]
+  - id: usage_based_cognitive_ling
+    label: Usage-based / cognitive linguistics
+    patterns: ["usage-based", "bruksbasert", "construction grammar", "konstruksjonsgrammatikk", "cognitive linguistic", "kognitiv lingvistikk"]
+  - id: generative_grammar
+    label: Generative / formal grammar
+    patterns: ["generative grammar", "generativ grammatikk", "minimalist", "syntactic theory", "chomsk"]
+  - id: multimodality_social_semiotics
+    label: Multimodality / social semiotics
+    patterns: ["multimodal", "social semiotic", "sosialsemiot", "kress", "van leeuwen", "semiotic resource"]
+  - id: new_literacy_studies
+    label: New Literacy Studies / literacy as social practice
+    patterns: ["new literacy studies", "literacy practices", "literacy as social practice", "\\bbarton\\b", "\\bstreet\\b.*literacy", "literacy events"]
+  - id: reader_response
+    label: Reader-response / literary didactics
+    patterns: ["reader[- ]response", "leserrespons", "rosenblatt", "\\biser\\b", "literary competence", "litterær kompetanse", "aesthetic reading"]
+  - id: narrative_theory
+    label: Narrative inquiry / narrative theory
+    patterns: ["narrative inquiry", "narrativ forskning", "narrative identity", "narrativ identitet", "clandinin", "storytelling as"]
+  - id: positioning_identity
+    label: Identity / positioning theory
+    patterns: ["positioning theory", "posisjoneringsteori", "identity theory", "identitetsteori", "professional identity", "profesjonsidentitet", "communities of practice", "praksisfellesskap", "wenger", "figured world"]
+  - id: professional_knowledge
+    label: Professional knowledge / expertise theory
+    patterns: ["pedagogical content knowledge", "\\bPCK\\b", "shulman", "practical knowledge", "praktisk kunnskap", "tacit knowledge", "taus kunnskap", "schön", "reflective practitioner", "reflekterende praktiker", "polanyi"]
+  - id: tpack_digital_competence
+    label: TPACK / digital competence frameworks
+    patterns: ["\\bTPACK\\b", "\\bPDK\\b", "professional digital competence", "profesjonsfaglig digital kompetanse", "digcomp", "\\bSAMR\\b"]
+  - id: connectivism_networked
+    label: Connectivism / networked learning
+    patterns: ["connectivis", "networked learning", "nettverkslæring"]
+  - id: design_thinking_maker
+    label: Constructionism / maker pedagogy
+    patterns: ["constructionis", "konstruksjonisme", "papert", "maker (culture|education|space)", "computational thinking", "algoritmisk tenkning"]
+  - id: deliberative_democracy
+    label: Deliberative democracy / Habermas
+    patterns: ["deliberativ", "habermas", "public sphere", "offentlighet", "communicative action", "kommunikativ handling"]
+  - id: citizenship_theory
+    label: Citizenship / civic education theory
+    patterns: ["citizenship education", "demokratisk medborgerskap", "civic education", "medborgerskap", "westheimer", "cosmopolitan"]
+  - id: human_rights_childrens_rights
+    label: Children's rights / human rights framework
+    patterns: ["children'?s rights", "barns rettigheter", "barnekonvensjon", "convention on the rights", "human rights education", "menneskerettighetsundervisning"]
+  - id: capability_approach
+    label: Capability approach (Sen / Nussbaum)
+    patterns: ["capability approach", "capabilit(y|ies) .*nussbaum", "amartya sen", "nussbaum"]
+  - id: recognition_honneth
+    label: Recognition theory (Honneth / Taylor)
+    patterns: ["recognition theory", "anerkjennelsesteori", "honneth", "struggle for recognition", "anerkjennelse"]
+  - id: care_ethics
+    label: Care ethics / relational pedagogy
+    patterns: ["ethics of care", "care ethics", "omsorgsetikk", "noddings", "relational pedagog", "relasjonell pedagogikk", "l[øo]gstrup", "levinas", "buber"]
+  - id: inclusive_education_theory
+    label: Inclusion / social model of disability
+    patterns: ["social model of disability", "inclusive education theory", "inkluderingsteori", "normalis", "ableis", "funksjonshemmingsteori", "crip theory", "universal design for learning", "universell utforming"]
+  - id: behaviour_analysis
+    label: Applied behaviour analysis
+    patterns: ["behavio(u)?r analy", "atferdsanaly", "operant", "reinforcement", "forsterkning", "skinner", "discrete trial"]
+  - id: developmental_psych
+    label: Developmental psychology / executive functions
+    patterns: ["executive function", "eksekutive funksjoner", "theory of mind", "self-regulation", "selvregulering", "temperament", "developmental cascade"]
+  - id: curriculum_theory
+    label: Curriculum theory / policy enactment
+    patterns: ["curriculum theory", "læreplanteori", "goodlad", "policy enactment", "ball and maguire", "curriculum making", "læreplanarbeid", "tyler rationale", "competence[- ]based curriculum"]
+  - id: new_public_management
+    label: Accountability / NPM / neoliberalism critique
+    patterns: ["new public management", "accountabilit", "ansvarliggjøring", "neoliberal", "nyliberal", "performativity", "marketi[sz]ation", "audit culture"]
+  - id: organisational_learning
+    label: Organisational learning / school development
+    patterns: ["organi[sz]ational learning", "organisasjonslæring", "professional learning communit", "profesjonelle læringsfellesskap", "argyris", "senge", "distributed leadership", "distribuert ledelse", "capacity building"]
+  - id: boundary_crossing
+    label: Boundary crossing / third space
+    patterns: ["boundary cross", "grensekryssing", "third space", "tredje rom", "boundary object", "hybrid space", "akkerman"]
+  - id: aesthetic_learning
+    label: Aesthetic learning / arts-based theory
+    patterns: ["aesthetic learning", "estetiske læreprosesser", "estetisk erfaring", "arts-based", "a/r/tography", "eisner", "greene"]
+  - id: play_theory
+    label: Play theory
+    patterns: ["play theory", "leketeori", "theory of play", "sutton-smith", "huizinga", "\\bplay(ful)? pedagog", "lekende"]
+  - id: nordic_ecec_pedagogy
+    label: Nordic social pedagogy / Fröbel tradition
+    patterns: ["social pedagog", "sosialpedagog", "fr[öo]bel", "nordic (model|tradition) of", "nordisk barnehagetradisjon", "educare"]
+  - id: ecological_sustainability
+    label: Sustainability education / critical ecopedagogy
+    patterns: ["ecopedagog", "økopedagog", "education for sustainable development", "utdanning for bærekraftig", "\\bESD\\b", "planetary", "degrowth", "anthropocen", "antropocen"]
+  - id: vocational_didactics
+    label: Vocational didactics / work-based learning theory
+    patterns: ["yrkesdidakt", "vocational didactic", "work-based learning", "arbeidsplassbasert læring", "billett", "yrkeskunnskap", "vocational knowledge", "lave and wenger", "apprenticeship", "mesterlære"]
+  - id: interpreting_translation_theory
+    label: Interpreting / translation studies theory
+    patterns: ["interpreting studies", "tolkevitenskap", "translation studies", "translatologi", "wadensjö", "dialogue interpreting", "role of the interpreter", "tolkens rolle"]
+  - id: cosmopolitan_intercultural
+    label: Intercultural / cosmopolitan theory
+    patterns: ["intercultural (competence|education|theory)", "interkulturell", "cosmopolitan", "kosmopolit", "transnational", "diaspora", "superdiversity"]
+  - id: development_studies
+    label: Development studies / postdevelopment
+    patterns: ["development studies", "utviklingsstudier", "post-development", "global south", "det globale sør", "world systems", "dependency theory", "sustainable development goals", "\\bSDG"]
+  - id: peace_conflict
+    label: Peace / conflict studies theory
+    patterns: ["peace education", "fredsundervisning", "galtung", "conflict transformation", "peacebuilding", "fredsbygging"]
+  - id: health_promotion
+    label: Health promotion / salutogenesis
+    patterns: ["salutogen", "antonovsky", "health promotion", "helsefremmende", "sense of coherence", "well-being theory", "livsmestring"]
