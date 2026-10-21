@@ -878,16 +878,21 @@ function viewScore() {
     return { v, kwHits };
   };
   let current = [], state = {};
+  const off = new Set((getQS().off || "").split(",").filter(Boolean));          // topics switched off by the user
+  const tChip = (id, extra = "") => { const m = macroOf(id); return `<a class="chip m toggle ${off.has(id) ? "off" : ""}" data-toggle="${esc(id)}" href="#/topic/${esc(id)}" style="background:${macroColor(m)}" title="${esc(id)} · klikk for å slå av/på i sammenligningen · ctrl/cmd-klikk åpner temaet">${esc(topicLabel(id))}${extra}</a>`; };
+  $("#app").addEventListener("click", ev => { const a = ev.target.closest("a.toggle[data-toggle]"); if (!a || ev.ctrlKey || ev.metaKey) return; ev.preventDefault(); const id = a.dataset.toggle; off.has(id) ? off.delete(id) : off.add(id); run(); });
   const run = () => {
     const f = state;
     const W = {}; ["wTopic", "wTheory", "wMethod", "wNew", "wUnit", "wActive"].forEach(id => { W[id] = +$("#" + id).value; $("#" + id + "v").textContent = W[id]; });
-    setQS({ ...f, ...W });
     const who = f.who ? D.persons.find(p => p.name.toLowerCase() === f.who.toLowerCase()) : null;
     const idea = (f.idea || "").trim();
     if (!who && !idea) { $("#res").innerHTML = '<p class="muted">Velg en person eller skriv en idé.</p>'; return; }
     let base, baseTh = new Set(), baseMe = new Set(), nb = new Map(), kwHits = new Map();
     if (who) { base = personVector(who); baseTh = new Set(who.theories.map(t => t.t)); baseMe = new Set(who.methods.map(t => t.t)); nb = neighbours(who); }
     else { const iv = ideaVector(idea); base = iv.v; kwHits = iv.kwHits; }
+    const baseAll = new Map(base);
+    for (const id of off) base.delete(id);
+    setQS({ ...f, ...W, off: [...off].join(",") });
     const rows = D.persons.filter(p => p.id !== who?.id && personMatches(p, f)).map(p => {
       const topic = base.size ? cosine(base, personVector(p)) : 0;
       const theory = baseTh.size ? p.theories.filter(t => baseTh.has(t.t)).length / Math.max(1, baseTh.size) : 0;
@@ -902,10 +907,13 @@ function viewScore() {
       return { p, score, topic, theory, method, isNew, kw, joint };
     }).filter(r => r.score > 0.15).sort((a, b) => b.score - a.score).slice(0, 50);
     current = rows;
+    const baseTopics = [...baseAll.entries()].sort((a, b) => b[1] - a[1]).slice(0, 15);
     $("#res").innerHTML = `<h2>Forslag${who ? ` for ${esc(who.name)}` : ` for «${esc(idea)}»`} (${rows.length})</h2>
+      <p class="small muted">Tema som brukes i sammenligningen – klikk på en flis for å slå den av (strek gjennom) eller på igjen:</p>
+      <div class="chips" style="margin-bottom:.6rem">${baseTopics.map(([t, v]) => tChip(t, ` ${v.toFixed(2)}`)).join("") || '<span class="muted">ingen temaprofil</span>'}</div>
       <table class="tbl"><tr><th>#</th><th>Person</th><th>Institutt</th><th>Felles / relevante tema</th><th class="num" title="Antall arbeider (inntil 30 forfattere) der utgangspersonen og kandidaten er medforfattere">Felles publ. ⓘ</th><th class="num" title="${esc(HELP.similarity)}">Tema ⓘ</th><th class="num" title="${esc(HELP.theoryOverlap)}">Teori ⓘ</th><th class="num" title="${esc(HELP.totalScore)}">Score ⓘ</th><th></th></tr>
       ${rows.map((r, i) => { const pv = personVector(r.p); const shared = [...base.keys()].filter(k => pv.has(k)).sort((a, b) => pv.get(b) - pv.get(a)).slice(0, 3);
-        return `<tr><td>${i + 1}</td><td>${personLink(r.p)}<div class="small muted">${esc(r.p.title || "")}${who && !r.isNew ? " · medforfattere" : ""}</div></td><td>${esc(unitLabel(r.p))}</td><td><div class="chips">${shared.map(t => topicChip(t)).join("")}</div></td><td class="num">${r.joint == null ? "–" : r.joint}</td><td class="num">${r.topic.toFixed(2)}</td><td class="num">${r.theory.toFixed(2)}</td><td class="num"><b>${r.score.toFixed(2)}</b></td><td>${who ? `<a class="small" href="#/pair/${esc(who.id)}/${esc(r.p.id)}">par</a>` : ""}</td></tr>`; }).join("")}</table>`;
+        return `<tr><td>${i + 1}</td><td>${personLink(r.p)}<div class="small muted">${esc(r.p.title || "")}${who && !r.isNew ? " · medforfattere" : ""}</div></td><td>${esc(unitLabel(r.p))}</td><td><div class="chips">${shared.map(t => tChip(t)).join("")}</div></td><td class="num">${r.joint == null ? "–" : r.joint}</td><td class="num">${r.topic.toFixed(2)}</td><td class="num">${r.theory.toFixed(2)}</td><td class="num"><b>${r.score.toFixed(2)}</b></td><td>${who ? `<a class="small" href="#/pair/${esc(who.id)}/${esc(r.p.id)}">par</a>` : ""}</td></tr>`; }).join("")}</table>`;
   };
   filterBar($("#bar"), [
     { id: "who", type: "text", label: "person (navn) …", list: "pnames2", width: 220 },
