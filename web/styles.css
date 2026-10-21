@@ -86,7 +86,10 @@ table.tbl th.sort-desc::after { content: " ▼"; font-size: 0.7em; }
 .matrix-wrap { overflow: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--card); }
 .matrix-wrap svg text { font-size: 10px; fill: var(--fg); }
 .matrix-wrap svg text.col:hover, .matrix-wrap svg text.row:hover { font-size: 15px !important; font-weight: 600; paint-order: stroke; stroke: var(--bg); stroke-width: 4px; }
-.matrix-wrap { overflow-x: hidden; }
+.matrix-wrap { overflow: auto; -webkit-overflow-scrolling: touch; touch-action: pan-x pan-y; cursor: grab; }
+.matrix-wrap.dragging { cursor: grabbing; user-select: none; }
+#cy canvas { touch-action: none; }
+@media (max-width: 760px) { table.tbl { display: block; overflow-x: auto; white-space: nowrap; } .cols { grid-template-columns: 1fr; } }
 .tooltip { position: fixed; pointer-events: none; background: var(--fg); color: var(--bg); padding: 0.3rem 0.5rem; border-radius: 4px; font-size: 0.8rem; z-index: 10; max-width: 320px; }
 
 .slider { display: grid; grid-template-columns: 220px 1fr 40px; gap: 0.6rem; align-items: center; font-size: 0.9rem; }

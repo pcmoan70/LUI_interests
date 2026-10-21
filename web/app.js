@@ -1229,6 +1229,17 @@ function viewAbout() {
     <h2>PDF</h2><p>Alle sider har utskriftsvisning: bruk «PDF»-knappen (eller Ctrl/Cmd+P) og velg «Lagre som PDF».</p>`;
 }
 
+/* ---------------- drag-to-scroll with the mouse inside wide matrices (touch scrolls natively) ---------------- */
+(() => {
+  let wrap = null, sx = 0, sy = 0, sl = 0, st = 0, moved = false;
+  document.addEventListener("mousedown", ev => { const w = ev.target.closest(".matrix-wrap"); if (!w || ev.button !== 0) return; wrap = w; sx = ev.clientX; sy = ev.clientY; sl = w.scrollLeft; st = w.scrollTop; moved = false; });
+  document.addEventListener("mousemove", ev => { if (!wrap) return; const dx = ev.clientX - sx, dy = ev.clientY - sy; if (!moved && Math.hypot(dx, dy) < 4) return; moved = true; wrap.classList.add("dragging"); wrap.scrollLeft = sl - dx; wrap.scrollTop = st - dy; ev.preventDefault(); });
+  const stop = () => { if (wrap) wrap.classList.remove("dragging"); wrap = null; };
+  document.addEventListener("mouseup", stop); document.addEventListener("mouseleave", stop);
+  // a drag must not count as a click on a cell or label
+  document.addEventListener("click", ev => { if (moved && ev.target.closest(".matrix-wrap")) { ev.stopPropagation(); ev.preventDefault(); moved = false; } }, true);
+})();
+
 /* ---------------- sortable tables: click a header to sort, click again to reverse ---------------- */
 document.addEventListener("click", ev => {
   const th = ev.target.closest("table.tbl th"); if (!th) return;
