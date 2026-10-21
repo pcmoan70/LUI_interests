@@ -464,7 +464,7 @@ async function viewTopic(id) {
   $("#bar").insertAdjacentHTML("beforebegin", `<div class="toolbar no-print" style="margin:.4rem 0 .2rem">
       <a class="btn" href="#/graph?topic=${esc(id)}&et=coauthor,cites,shared_project&minw=0.25&color=unit&hideIso=0" title="Personer med dette temaet i profilen (styrke ≥ 0,05) og relasjonene mellom dem: medforfatterskap, siteringer og felles prosjekter">Graf: hvem har samarbeidet med hvem om ${esc(t.label_nb || t.label_en)} →</a>
       <a class="btn" href="#/relmatrix?topic=${esc(id)}&et=coauthor,cites,shared_project&hideIso=0">Relasjonsmatrise for temaet →</a>
-      <a class="btn" href="#/matrix?tt=${esc(id)}">Interessematrise →</a>
+      <a class="btn" href="#/matrix?pp=${encodeURIComponent(D.persons.filter(p => p.listed && p.topics.some(x => x.t === id && x.s >= 0.1)).sort((a, b) => (b.topics.find(x => x.t === id)?.s ?? 0) - (a.topics.find(x => x.t === id)?.s ?? 0)).slice(0, 80).map(p => p.id).join(","))}" title="Personer med dette temaet i profilen (styrke ≥ 0,10, inntil 80) og alle temaene de er interessert i">Interessematrise: personene med temaet og deres øvrige tema →</a>
     </div>`);
   filterBar($("#bar"), [
     { id: "unit", type: "select", label: "institutt", options: unitOptions() },
