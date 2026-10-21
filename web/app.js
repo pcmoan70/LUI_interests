@@ -78,6 +78,8 @@ const topicLabel = id => { const t = idx.topic.get(id); return t ? (t.label_nb |
 const macroOf = id => { const t = idx.topic.get(id); return t ? idx.macro.get(t.macro_id) : null; };
 const macroColor = m => m ? MACRO_COLORS[m.i % MACRO_COLORS.length] : "#999";
 const unitName = id => idx.unit.get(id)?.short_code || "";
+/** Institute code for LUI staff; "(Ekstern)" / "(OsloMet)" for coauthor nodes outside LUI. */
+const unitLabel = p => !p ? "" : (p.listed || !p.type || p.type === "former_lui") ? (unitName(p.unit) || "LUI") : p.type === "oslomet" ? "(OsloMet)" : "(Ekstern)";
 const personLink = p => `<a href="#/person/${esc(p.id)}">${esc(p.name)}</a>`;
 const topicChip = (t, extra = "") => { const m = macroOf(t.t ?? t); const id = t.t ?? t;
   return `<a class="chip m" style="background:${macroColor(m)}" href="#/topic/${esc(id)}" title="${esc(id)} · ${esc(m?.label_nb || "")}">${esc(topicLabel(id))}${extra}</a>`; };
@@ -241,14 +243,14 @@ function viewExplore() {
     $("#list").innerHTML = people.slice(0, 400).map(p => personCard(p, f)).join("") + (people.length > 400 ? `<p class="muted">… ${people.length - 400} flere, avgrens søket.</p>` : "");
   });
   $("#csv").addEventListener("click", () => downloadCSV("lui-personer.csv", [["navn", "tittel", "institutt", "type", "vitensk_publ", "første_år", "siste_år", "primærtema", "profil"],
-    ...current.map(p => [p.name, p.title, unitName(p.unit), p.type, p.nCore, p.years?.[0], p.years?.[1], p.topics.filter(t => t.p).map(t => `${t.t} ${topicLabel(t.t)}`).join(" | "), p.url])]));
+    ...current.map(p => [p.name, p.title, unitLabel(p), p.type, p.nCore, p.years?.[0], p.years?.[1], p.topics.filter(t => t.p).map(t => `${t.t} ${topicLabel(t.t)}`).join(" | "), p.url])]));
 }
 function personCard(p, f = {}) {
   let tops = (p.topics || []).filter(t => t.p || t.s >= 0.15).slice(0, 4);
   if (f.topic && !tops.some(t => t.t === f.topic)) { const t = p.topics.find(t => t.t === f.topic); if (t) tops = [t, ...tops].slice(0, 4); }
   return `<div class="card">
     <div class="name">${personLink(p)}</div>
-    <div class="sub">${p.listed ? `${esc(p.title || "")} · ${esc(unitName(p.unit))}` : `${esc(EXT_LABEL[p.type] || "ikke i ansattoversikten")}${p.aff ? ` · ${esc(p.aff)}${p.country && p.country !== "NO" ? ` (${esc(p.country)})` : ""}` : ""}`}</div>
+    <div class="sub">${p.listed ? `${esc(p.title || "")} · ${esc(unitLabel(p))}` : `${esc(EXT_LABEL[p.type] || "ikke i ansattoversikten")}${p.aff ? ` · ${esc(p.aff)}${p.country && p.country !== "NO" ? ` (${esc(p.country)})` : ""}` : ""}`}</div>
     <div class="sub">${p.listed || !p.nJoint ? `${p.nCore} vitensk. publ.` : `${p.nJoint} felles publ. med LUI`}${p.years ? ` (${p.years[0]}–${p.years[1]})` : ""}${p.thin && p.listed ? ' · <span title="lite tekstgrunnlag">tynn profil</span>' : ""}</div>
     <div class="chips">${tops.map(t => topicChip(t)).join("")}${tops.length ? "" : (p.keywords || []).slice(0, 4).map(k => `<span class="chip k">${esc(k)}</span>`).join("")}</div>
   </div>`;
@@ -354,7 +356,7 @@ async function viewPerson(id) {
         ${coll.length ? `<table class="tbl"><tr><th>Person</th><th>Relasjon</th></tr>${coll.slice(0, 40).map(c => `<tr><td>${personLink(c.p)} <a class="small" href="#/pair/${esc(id)}/${esc(c.p.id)}">par</a></td><td class="small">${Object.values(c.es).map(e => `<span style="color:${EDGE_COLOR[e.type]}">${EDGE_LABEL[e.type]}${e.type === "coauthor" || e.type === "cites" ? ` (${e.n}${e.y0 ? `, ${e.y0}–${e.y1}` : ""})` : ""}</span>`).join(", ")}</td></tr>`).join("")}</table>` : '<p class="muted">Ingen registrerte relasjoner.</p>'}
         <h2>Mulige nye samarbeidspartnere</h2>
         <p class="muted small">Tematisk nærhet uten eksisterende medforfatterskap. <a href="#/score?who=${encodeURIComponent(p.name)}">Juster kriterier →</a></p>
-        ${suggestions.length ? `<table class="tbl">${suggestions.map(s => `<tr><td>${personLink(s.p)}<div class="small muted">${esc(unitName(s.p.unit))} · ${esc(s.p.title || "")}</div></td><td class="num">${s.s.toFixed(2)}</td><td><a class="small" href="#/pair/${esc(id)}/${esc(s.p.id)}">par</a></td></tr>`).join("")}</table>` : '<p class="muted">Trenger temaprofil.</p>'}
+        ${suggestions.length ? `<table class="tbl">${suggestions.map(s => `<tr><td>${personLink(s.p)}<div class="small muted">${esc(unitLabel(s.p))} · ${esc(s.p.title || "")}</div></td><td class="num">${s.s.toFixed(2)}</td><td><a class="small" href="#/pair/${esc(id)}/${esc(s.p.id)}">par</a></td></tr>`).join("")}</table>` : '<p class="muted">Trenger temaprofil.</p>'}
         ${p.groups.length ? `<h2>Forskningsgrupper</h2><ul>${p.groups.map(g => `<li><a href="#/group/${esc(g.g)}">${esc(idx.group.get(g.g)?.name || g.g)}</a> <span class="muted small">${esc(g.r)}</span></li>`).join("")}</ul>` : ""}
         ${p.projects.length ? `<h2>Prosjekter</h2><ul>${p.projects.slice(0, 25).map(pr => `<li><a href="#/project/${esc(pr.p)}">${esc(idx.project.get(pr.p)?.title_nb || idx.project.get(pr.p)?.title_en || pr.p)}</a></li>`).join("")}</ul>` : ""}
       </div>
@@ -383,7 +385,7 @@ async function viewPair(a, b) {
   const thA = new Set(pa.theories.map(t => t.t)), thB = new Set(pb.theories.map(t => t.t)), meA = new Set(pa.methods.map(t => t.t)), meB = new Set(pb.methods.map(t => t.t));
   app.innerHTML = `
     <h1>${personLink(pa)} &amp; ${personLink(pb)}</h1>
-    <div class="muted">${esc(unitName(pa.unit))} · ${esc(pa.title || "")} &nbsp;|&nbsp; ${esc(unitName(pb.unit))} · ${esc(pb.title || "")} &nbsp;|&nbsp; tematisk likhet ${cosine(va, vb).toFixed(2)}</div>
+    <div class="muted">${esc(unitLabel(pa))} · ${esc(pa.title || "")} &nbsp;|&nbsp; ${esc(unitLabel(pb))} · ${esc(pb.title || "")} &nbsp;|&nbsp; tematisk likhet ${cosine(va, vb).toFixed(2)}</div>
     <div class="cols"><div>
       <h2>Felles tema</h2>${shared.length ? `<div class="chips">${shared.map(t => topicChip(t, ` ${t.s.toFixed(2)}`)).join("")}</div>` : '<p class="muted">Ingen felles tema.</p>'}
       <h3>Komplementære tema</h3>
@@ -454,7 +456,7 @@ async function viewTopic(id) {
     const people = D.persons.map(p => ({ p, s: (p.topics || []).find(x => x.t === id)?.s ?? 0, n: (p.topics || []).find(x => x.t === id)?.n ?? 0 }))
       .filter(x => x.s >= (+f.tmin || 0.05) && scopeOk(x.p, f.scope) && (!f.unit || x.p.unit === f.unit) && (!f.type || x.p.type === f.type) && (!yearsSet || activeIn(x.p, ya, yb))).sort((a, b) => b.s - a.s);
     $("#ph").textContent = `Personer (${people.length})`; $("#pubh").textContent = `Publikasjoner (${pubs.length})`;
-    $("#people").innerHTML = `<table class="tbl"><tr><th>Person</th><th>Institutt</th><th class="num">Styrke</th><th class="num">Publ.</th></tr>${people.slice(0, 100).map(x => `<tr><td>${personLink(x.p)}</td><td>${esc(unitName(x.p.unit))}</td><td class="num">${x.s.toFixed(2)}</td><td class="num">${x.n}</td></tr>`).join("")}</table>`;
+    $("#people").innerHTML = `<table class="tbl"><tr><th>Person</th><th>Institutt</th><th class="num">Styrke</th><th class="num">Publ.</th></tr>${people.slice(0, 100).map(x => `<tr><td>${personLink(x.p)}</td><td>${esc(unitLabel(x.p))}</td><td class="num">${x.s.toFixed(2)}</td><td class="num">${x.n}</td></tr>`).join("")}</table>`;
     $("#pubs").innerHTML = pubs.slice(0, 150).map(p => pubItem(p)).join("");
     const years = d3.rollup(pubs.filter(p => p.year), v => v.length, p => p.year);
     $("#trend").innerHTML = [...years.entries()].sort((a, b) => a[0] - b[0]).map(([y, n]) => `${y}: ${"▮".repeat(Math.min(n, 40))} ${n}`).join("<br>");
@@ -576,7 +578,7 @@ function viewMatrix() {
     $("#mx").replaceChildren(svg.node());
   }
   $("#csv").addEventListener("click", () => downloadCSV("lui-matrise.csv", [["person", "institutt", ...lastTopics.map(t => t.topic_id)],
-    ...lastPeople.map(p => { const v = personVector(p); return [p.name, unitName(p.unit), ...lastTopics.map(t => (v.get(t.topic_id) ?? 0).toFixed(3))]; })]));
+    ...lastPeople.map(p => { const v = personVector(p); return [p.name, unitLabel(p), ...lastTopics.map(t => (v.get(t.topic_id) ?? 0).toFixed(3))]; })]));
 }
 
 /* ---------------- graph (D3 force layout on canvas) ---------------- */
@@ -817,7 +819,7 @@ function viewScore() {
     $("#res").innerHTML = `<h2>Forslag${who ? ` for ${esc(who.name)}` : ` for «${esc(idea)}»`} (${rows.length})</h2>
       <table class="tbl"><tr><th>#</th><th>Person</th><th>Institutt</th><th>Felles / relevante tema</th><th class="num">Tema</th><th class="num">Teori</th><th class="num">Score</th><th></th></tr>
       ${rows.map((r, i) => { const pv = personVector(r.p); const shared = [...base.keys()].filter(k => pv.has(k)).sort((a, b) => pv.get(b) - pv.get(a)).slice(0, 3);
-        return `<tr><td>${i + 1}</td><td>${personLink(r.p)}<div class="small muted">${esc(r.p.title || "")}${who && !r.isNew ? " · medforfattere" : ""}</div></td><td>${esc(unitName(r.p.unit))}</td><td><div class="chips">${shared.map(t => topicChip(t)).join("")}</div></td><td class="num">${r.topic.toFixed(2)}</td><td class="num">${r.theory.toFixed(2)}</td><td class="num"><b>${r.score.toFixed(2)}</b></td><td>${who ? `<a class="small" href="#/pair/${esc(who.id)}/${esc(r.p.id)}">par</a>` : ""}</td></tr>`; }).join("")}</table>`;
+        return `<tr><td>${i + 1}</td><td>${personLink(r.p)}<div class="small muted">${esc(r.p.title || "")}${who && !r.isNew ? " · medforfattere" : ""}</div></td><td>${esc(unitLabel(r.p))}</td><td><div class="chips">${shared.map(t => topicChip(t)).join("")}</div></td><td class="num">${r.topic.toFixed(2)}</td><td class="num">${r.theory.toFixed(2)}</td><td class="num"><b>${r.score.toFixed(2)}</b></td><td>${who ? `<a class="small" href="#/pair/${esc(who.id)}/${esc(r.p.id)}">par</a>` : ""}</td></tr>`; }).join("")}</table>`;
   };
   filterBar($("#bar"), [
     { id: "who", type: "text", label: "person (navn) …", list: "pnames2", width: 220 },
@@ -832,7 +834,7 @@ function viewScore() {
     SCOPE_FIELD(),
   ], f => { state = f; run(); });
   document.querySelectorAll("#weights input").forEach(x => x.addEventListener("input", run));
-  $("#csv").addEventListener("click", () => downloadCSV("lui-forslag.csv", [["rang", "navn", "institutt", "tittel", "tema", "teori", "score"], ...current.map((r, i) => [i + 1, r.p.name, unitName(r.p.unit), r.p.title, r.topic.toFixed(2), r.theory.toFixed(2), r.score.toFixed(2)])]));
+  $("#csv").addEventListener("click", () => downloadCSV("lui-forslag.csv", [["rang", "navn", "institutt", "tittel", "tema", "teori", "score"], ...current.map((r, i) => [i + 1, r.p.name, unitLabel(r.p), r.p.title, r.topic.toFixed(2), r.theory.toFixed(2), r.score.toFixed(2)])]));
 }
 
 /* ---------------- seriation: Louvain on the filtered graph, spectral block ordering, best-of candidates ---------------- */
