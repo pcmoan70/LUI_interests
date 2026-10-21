@@ -12,10 +12,11 @@ const HELP = {
   score: "Andel av personens temaprofil: for hvert arbeid summeres temavekt × kategorivekt (artikkel 1,0; kapittel 0,9; bok/avhandling 1,2; rapport 0,7; foredrag 0,3; lærebok 0,5; formidling 0,2) × nyhetsvekt (halveres per 8 år). Presentasjonstekst og egne nøkkelord teller som 1,5–2 arbeider. Summen normaliseres til 1 per person.",
   topicPubs: "Arbeider der dette temaet er blant de 1–4 tildelte temaene, og som passerer filtrene over (type, år, institutt).",
   topicPersons: "Personer med temaet i profilen med styrke ≥ 0,05 (se forklaring på styrke).",
-  similarity: "Cosinus-likhet mellom de to personenes temaprofiler (vektorer over 78 tema): 0 = ingen felles tema, 1 = identisk profil.",
+  similarity: "Tematisk likhet (0–1): hvor stor del av de to personenes temaprofiler som overlapper, vektet med styrken på hvert tema. 0 = ingen felles tema, 1 = samme profil.",
+  simScore: "Tematisk likhet (0–1) mellom utgangspersonen (eller idéen) og kandidaten, beregnet bare over temaene som er slått på i listen over – tema med strek gjennom holdes utenfor for begge. 0 = ingen felles tema, 1 = samme profil.",
   theoryOverlap: "Andel av utgangspersonens teoretiske rammeverk (gjenkjent med kontrollerte vokabularer i sammendrag, innledning og konklusjon) som kandidaten også bruker.",
-  totalScore: "Vektet sum: tematisk overlapp (cosinus + nøkkelordtreff) × w1 + felles teori × w2 + komplementær metode × w3 + bonus for ikke-medforfattere × w4 + bonus for annet institutt × w5 + nylig aktivitet × w6, med vektene fra glidebryterne.",
-  relations: "Registrerte relasjoner mellom personer: medforfatterskap (vektet 1/(k−1) per arbeid med k kjente forfattere), siteringer (via OpenAlex), felles forskningsgruppe, felles prosjekt og tematisk likhet (cosinus ≥ 0,35).",
+  totalScore: "Vektet sum: tematisk likhet over temaene som er slått på (+ nøkkelordtreff for idé-søk) × w1 + felles teori × w2 + komplementær metode × w3 + bonus for ikke-medforfattere × w4 + bonus for annet institutt × w5 + nylig aktivitet × w6, med vektene fra glidebryterne.",
+  relations: "Registrerte relasjoner mellom personer: medforfatterskap (vektet 1/(k−1) per arbeid med k kjente forfattere), siteringer (via OpenAlex), felles forskningsgruppe, felles prosjekt og tematisk likhet (likhet ≥ 0,35).",
 };
 const GROUP_LABEL = { article: "Artikkel", chapter: "Kapittel", monograph: "Bok", phd: "Doktoravhandling", report: "Rapport", lecture: "Foredrag", textbook: "Lærebok", popular: "Populærvitenskap", media: "Media", thesis: "Oppgave", other: "Annet" };
 
@@ -355,7 +356,7 @@ async function viewPerson(id) {
     <div class="toolbar no-print" style="margin:.5rem 0 .2rem">
       <a class="btn" href="#/graph?focus=${encodeURIComponent(p.name)}&et=coauthor,cites&ext=1">Graf: ${esc(p.name)} og medforfattere →</a>
       <a class="btn" href="#/score?who=${encodeURIComponent(p.name)}">Finn samarbeid for ${esc(p.name)} →</a>
-      <a class="btn" href="#/matrix?pp=${encodeURIComponent([p.id, ...D.persons.filter(o => o.id !== id && o.listed && o.topics.length).map(o => ({ o, s: cosine(myVec, personVector(o)) })).sort((a, b) => b.s - a.s).slice(0, 12).map(x => x.o.id)].join(","))}" title="personen og de 12 med høyest tematisk likhet (cosinus)">Interessematrise: ${esc(p.name)} + 12 nærmeste →</a>
+      <a class="btn" href="#/matrix?pp=${encodeURIComponent([p.id, ...D.persons.filter(o => o.id !== id && o.listed && o.topics.length).map(o => ({ o, s: cosine(myVec, personVector(o)) })).sort((a, b) => b.s - a.s).slice(0, 12).map(x => x.o.id)].join(","))}" title="personen og de 12 med høyest tematisk likhet">Interessematrise: ${esc(p.name)} + 12 nærmeste →</a>
     </div>
     ${p.bio ? `<p>${esc(p.bio)}</p>` : '<p class="muted">Ingen presentasjonstekst funnet.</p>'}
     <div class="cols">
@@ -893,8 +894,9 @@ function viewScore() {
     const baseAll = new Map(base);
     for (const id of off) base.delete(id);
     setQS({ ...f, ...W, off: [...off].join(",") });
+    const restrict = v => { for (const id of off) v.delete(id); return v; };
     const rows = D.persons.filter(p => p.id !== who?.id && personMatches(p, f)).map(p => {
-      const topic = base.size ? cosine(base, personVector(p)) : 0;
+      const topic = base.size ? cosine(base, restrict(personVector(p))) : 0;
       const theory = baseTh.size ? p.theories.filter(t => baseTh.has(t.t)).length / Math.max(1, baseTh.size) : 0;
       const method = baseMe.size ? p.methods.filter(t => !baseMe.has(t.t)).length / Math.max(1, p.methods.length) : 0;
       const joint = who ? (nb.get(p.id)?.coauthor?.n || 0) : null;
@@ -909,9 +911,9 @@ function viewScore() {
     current = rows;
     const baseTopics = [...baseAll.entries()].sort((a, b) => b[1] - a[1]).slice(0, 15);
     $("#res").innerHTML = `<h2>Forslag${who ? ` for ${esc(who.name)}` : ` for «${esc(idea)}»`} (${rows.length})</h2>
-      <p class="small muted">Tema som brukes i sammenligningen – klikk på en flis for å slå den av (strek gjennom) eller på igjen:</p>
+      <p class="small muted">Tema som brukes i sammenligningen – klikk på en flis for å slå den av (strek gjennom) eller på igjen. Likheten beregnes bare over temaene som er på, for begge parter:</p>
       <div class="chips" style="margin-bottom:.6rem">${baseTopics.map(([t, v]) => tChip(t, ` ${v.toFixed(2)}`)).join("") || '<span class="muted">ingen temaprofil</span>'}</div>
-      <table class="tbl"><tr><th>#</th><th>Person</th><th>Institutt</th><th>Felles / relevante tema</th><th class="num" title="Antall arbeider (inntil 30 forfattere) der utgangspersonen og kandidaten er medforfattere">Felles publ. ⓘ</th><th class="num" title="${esc(HELP.similarity)}">Tema ⓘ</th><th class="num" title="${esc(HELP.theoryOverlap)}">Teori ⓘ</th><th class="num" title="${esc(HELP.totalScore)}">Score ⓘ</th><th></th></tr>
+      <table class="tbl"><tr><th>#</th><th>Person</th><th>Institutt</th><th>Felles / relevante tema</th><th class="num" title="Antall arbeider (inntil 30 forfattere) der utgangspersonen og kandidaten er medforfattere">Felles publ. ⓘ</th><th class="num" title="${esc(HELP.simScore)}">Tema ⓘ</th><th class="num" title="${esc(HELP.theoryOverlap)}">Teori ⓘ</th><th class="num" title="${esc(HELP.totalScore)}">Score ⓘ</th><th></th></tr>
       ${rows.map((r, i) => { const pv = personVector(r.p); const shared = [...base.keys()].filter(k => pv.has(k)).sort((a, b) => pv.get(b) - pv.get(a)).slice(0, 3);
         return `<tr><td>${i + 1}</td><td>${personLink(r.p)}<div class="small muted">${esc(r.p.title || "")}${who && !r.isNew ? " · medforfattere" : ""}</div></td><td>${esc(unitLabel(r.p))}</td><td><div class="chips">${shared.map(t => tChip(t)).join("")}</div></td><td class="num">${r.joint == null ? "–" : r.joint}</td><td class="num">${r.topic.toFixed(2)}</td><td class="num">${r.theory.toFixed(2)}</td><td class="num"><b>${r.score.toFixed(2)}</b></td><td>${who ? `<a class="small" href="#/pair/${esc(who.id)}/${esc(r.p.id)}">par</a>` : ""}</td></tr>`; }).join("")}</table>`;
   };
