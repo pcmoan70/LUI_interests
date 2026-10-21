@@ -24,10 +24,37 @@ def lui_ids(con) -> set[str]:
     return {r[0] for r in con.execute("SELECT person_id FROM person WHERE is_listed=1 OR resolved_by='cristin_only'")}
 
 
+def merge_name_duplicates(con) -> int:
+    """Merge name-only nodes (ext:*) into an existing identified person with the same normalised name."""
+    by_name: dict[str, list[str]] = defaultdict(list)
+    for pid, name in con.execute("SELECT person_id, name_full FROM person WHERE person_id NOT LIKE 'ext:%'"):
+        by_name[norm(name)].append(pid)
+    merged = 0
+    for pid, name in con.execute("SELECT person_id, name_full FROM person WHERE person_id LIKE 'ext:%'").fetchall():
+        targets = by_name.get(norm(name), [])
+        if len(targets) != 1:
+            continue
+        target = targets[0]
+        con.execute("UPDATE publication_author SET person_id=? WHERE person_id=?", (target, pid))
+        for t in ("person_topic", "person_theory", "person_method", "person_keyword", "person_edge"):
+            col = "src_person_id" if t == "person_edge" else "person_id"
+            con.execute(f"DELETE FROM {t} WHERE {col}=?", (pid,))
+        con.execute("DELETE FROM person_edge WHERE dst_person_id=?", (pid,))
+        con.execute("DELETE FROM person WHERE person_id=?", (pid,))
+        merged += 1
+    con.commit()
+    return merged
+
+
 def run(refresh=False, max_age=90, limit=None) -> None:
     con = connect()
     f = Fetcher("cristin", max_age_days=max_age, refresh=refresh)
     core = lui_ids(con)
+    print(f"merged {merge_name_duplicates(con)} name-only duplicates into identified persons", flush=True)
+    # normalised names of every identified person: name-only author rows are attached to them instead of new nodes
+    name_to_pid: dict[str, list[str]] = defaultdict(list)
+    for pid, name in con.execute("SELECT person_id, name_full FROM person WHERE person_id NOT LIKE 'ext:%'"):
+        name_to_pid[norm(name)].append(pid)
 
     # publications with at least one LUI author, excluding mass-author papers
     joint_pubs = {r[0]: (r[1], r[2]) for r in con.execute(f"""
@@ -40,6 +67,10 @@ def run(refresh=False, max_age=90, limit=None) -> None:
     for pub_id, cid, name, aff in con.execute(
             "SELECT pub_id, cristin_person_id, name_raw, affiliation_unit_id FROM publication_author WHERE person_id IS NULL"):
         if pub_id not in joint_pubs or not name:
+            continue
+        if not cid and len(name_to_pid.get(norm(name), [])) == 1:      # known person, row just lacks the Cristin id
+            con.execute("UPDATE publication_author SET person_id=? WHERE pub_id=? AND person_id IS NULL AND cristin_person_id IS NULL AND name_raw=?",
+                        (name_to_pid[norm(name)][0], pub_id, name))
             continue
         key = f"cristin:{cid}" if cid else f"ext:{hashlib.sha1(norm(name).encode()).hexdigest()[:12]}"
         g = groups.setdefault(key, {"cid": cid, "names": Counter(), "affs": Counter(), "pubs": set(), "core": 0, "years": []})
