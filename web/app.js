@@ -458,8 +458,18 @@ async function viewTopic(id) {
     $("#ph").textContent = `Personer (${people.length})`; $("#pubh").textContent = `Publikasjoner (${pubs.length})`;
     $("#people").innerHTML = `<table class="tbl"><tr><th>Person</th><th>Institutt</th><th class="num">Styrke</th><th class="num">Publ.</th></tr>${people.slice(0, 100).map(x => `<tr><td>${personLink(x.p)}</td><td>${esc(unitLabel(x.p))}</td><td class="num">${x.s.toFixed(2)}</td><td class="num">${x.n}</td></tr>`).join("")}</table>`;
     $("#pubs").innerHTML = pubs.slice(0, 150).map(p => pubItem(p)).join("");
-    const years = d3.rollup(pubs.filter(p => p.year), v => v.length, p => p.year);
-    $("#trend").innerHTML = [...years.entries()].sort((a, b) => a[0] - b[0]).map(([y, n]) => `${y}: ${"▮".repeat(Math.min(n, 40))} ${n}`).join("<br>");
+    const years = [...d3.rollup(pubs.filter(p => p.year), v => v.length, p => p.year).entries()].sort((a, b) => a[0] - b[0]);
+    const drawTrend = () => {
+      const el = $("#trend"); if (!el || !years.length) { if (el) el.innerHTML = '<span class="muted">Ingen årstall.</span>'; return; }
+      const maxN = Math.max(...years.map(([, n]) => n));
+      const blockPx = 9, reserved = 90;                              // year label + count
+      const maxBlocks = Math.max(5, Math.floor((el.clientWidth - reserved) / blockPx));
+      const unit = Math.max(1, Math.ceil(maxN / maxBlocks));          // publications per block
+      el.innerHTML = years.map(([y, n]) => `<div class="trend-row"><span class="trend-y">${y}</span><span class="trend-bar" title="${n} publikasjoner">${"▮".repeat(Math.ceil(n / unit))}</span><span class="trend-n">${n}</span></div>`).join("") +
+        `<div class="muted small">▮ = ${unit} publikasjon${unit > 1 ? "er" : ""}</div>`;
+    };
+    drawTrend();
+    if (!window.__trendResize) { window.__trendResize = true; addEventListener("resize", () => { if (document.getElementById("trend")) drawTrend(); }); }
     $("#f_count").textContent = "";
   });
 }
@@ -667,6 +677,7 @@ function viewGraph() {
     { id: "spread", type: "range", label: "spredning", min: 0.5, max: 3, step: 0.25, value: 1.5 },
     { id: "focus", type: "text", label: "fokuser på person …", list: "pnames" },
     { id: "hideIso", type: "check", label: "skjul isolerte", value: true },
+    { id: "ext", type: "check", label: "ta med eksterne medforfattere (grå)" },
     SCOPE_FIELD(),
   ], state => { f = state; apply(); });
   $("#legend").addEventListener("click", ev => {
@@ -688,6 +699,11 @@ function viewGraph() {
     if (yearsSet) people = people.filter(p => focus?.id === p.id || activeIn(p, y0, y1));
     if (commFilter != null) people = people.filter(p => (idx.community.get(p.id) ?? -1) === commFilter || focus?.id === p.id);
     let ids = new Set(people.map(p => p.id));
+    if (f.ext) {   // external coauthors linked (by the chosen edge types) to the people shown
+      const extra = new Set();
+      for (const e of edges) { if (ids.has(e.s) && !ids.has(e.t)) extra.add(e.t); if (ids.has(e.t) && !ids.has(e.s)) extra.add(e.s); }
+      for (const id of extra) { const p = idx.person.get(id); if (p && !isLui(p)) { ids.add(id); people.push(p); } }
+    }
     if (focus) { const nb = new Set([focus.id]); for (const e of edges) { if (e.s === focus.id) nb.add(e.t); if (e.t === focus.id) nb.add(e.s); } ids = new Set([...ids].filter(i => nb.has(i))); people = D.persons.filter(p => ids.has(p.id)); }
     edges = edges.filter(e => ids.has(e.s) && ids.has(e.t));
     if (f.hideIso) { const deg = new Set(); edges.forEach(e => { deg.add(e.s); deg.add(e.t); }); people = people.filter(p => deg.has(p.id)); }
@@ -698,7 +714,7 @@ function viewGraph() {
       : f.color === "community" ? [...commCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 14).map(([c, n]) => item(`comm:${c}`, commColor(c), `fellesskap ${c} (${n})`, commFilter === c))
       : D.meta.units.filter(u => u.short_code !== "LUI").map(u => item(`unit:${u.unit_id}`, unitColor(u.unit_id), u.short_code, f.unit === u.unit_id))).join("") +
       Object.keys(EDGE_LABEL).map(t => item(`et:${t}`, types.has(t) ? EDGE_COLOR[t] : "transparent", EDGE_LABEL[t], types.has(t))).join("") +
-      (f.scope ? `<span><i style="background:#9a9a9a"></i>utenfor LUI</span>` : "") +
+      (f.scope || f.ext ? `<span><i style="background:#9a9a9a"></i>utenfor LUI</span>` : "") +
       (commFilter != null && f.color !== "community" ? `<span data-legend="comm:${commFilter}" class="on"><i style="background:${commColor(commFilter)}"></i>fellesskap ${commFilter} ×</span>` : "");
     // keep positions of nodes that survive a filter change so the layout stays calm
     const old = new Map(nodes.map(n => [n.id, n]));

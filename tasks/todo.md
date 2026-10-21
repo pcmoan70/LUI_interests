@@ -78,6 +78,7 @@ Plan: see ../PLAN.md. Tick items as they are completed; add a Review section per
 - [x] Relational matrix: hierarchical default order (institute → Louvain within institute → spectral) with institute bands and thick separators; flat optimised order still selectable; edge types for clustering chosen from a multi-select dropdown (user requests 2026-10-21)
 - [x] All tables sortable by column (alphabetical / numeric, toggle direction); topic page gets the person-scope selector (user request 2026-10-21)
 - [x] Non-LUI persons shown as (Ekstern) / (OsloMet) instead of an institute code (user request 2026-10-21)
+- [x] Topic trend: one line per year, block value scales to fit; graph checkbox to include external coauthors as grey nodes (user requests 2026-10-21)
 - [ ] Playwright batch PDF export
 - [ ] nb/en toggle, accessibility pass
 
