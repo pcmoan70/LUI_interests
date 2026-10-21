@@ -858,19 +858,20 @@ function viewScore() {
       const topic = base.size ? cosine(base, personVector(p)) : 0;
       const theory = baseTh.size ? p.theories.filter(t => baseTh.has(t.t)).length / Math.max(1, baseTh.size) : 0;
       const method = baseMe.size ? p.methods.filter(t => !baseMe.has(t.t)).length / Math.max(1, p.methods.length) : 0;
-      const isNew = who ? (nb.get(p.id)?.coauthor ? 0 : 1) : 0;
+      const joint = who ? (nb.get(p.id)?.coauthor?.n || 0) : null;
+      const isNew = who ? (joint ? 0 : 1) : 0;
       const otherUnit = who ? (p.unit !== who.unit ? 1 : 0) : 0;
       const active = p.years && p.years[1] >= THIS_YEAR - 5 ? 1 : 0;
       const kw = kwHits.get(p.id) || 0;
       const rel = topic > 0.2 || kw > 0 ? 1 : 0;
       const score = W.wTopic * (topic + kw) + W.wTheory * theory + W.wMethod * method * rel + W.wNew * isNew * rel + W.wUnit * otherUnit * rel + W.wActive * active * rel;
-      return { p, score, topic, theory, method, isNew, kw };
+      return { p, score, topic, theory, method, isNew, kw, joint };
     }).filter(r => r.score > 0.15).sort((a, b) => b.score - a.score).slice(0, 50);
     current = rows;
     $("#res").innerHTML = `<h2>Forslag${who ? ` for ${esc(who.name)}` : ` for «${esc(idea)}»`} (${rows.length})</h2>
-      <table class="tbl"><tr><th>#</th><th>Person</th><th>Institutt</th><th>Felles / relevante tema</th><th class="num" title="${esc(HELP.similarity)}">Tema ⓘ</th><th class="num" title="${esc(HELP.theoryOverlap)}">Teori ⓘ</th><th class="num" title="${esc(HELP.totalScore)}">Score ⓘ</th><th></th></tr>
+      <table class="tbl"><tr><th>#</th><th>Person</th><th>Institutt</th><th>Felles / relevante tema</th><th class="num" title="Antall arbeider (inntil 30 forfattere) der utgangspersonen og kandidaten er medforfattere">Felles publ. ⓘ</th><th class="num" title="${esc(HELP.similarity)}">Tema ⓘ</th><th class="num" title="${esc(HELP.theoryOverlap)}">Teori ⓘ</th><th class="num" title="${esc(HELP.totalScore)}">Score ⓘ</th><th></th></tr>
       ${rows.map((r, i) => { const pv = personVector(r.p); const shared = [...base.keys()].filter(k => pv.has(k)).sort((a, b) => pv.get(b) - pv.get(a)).slice(0, 3);
-        return `<tr><td>${i + 1}</td><td>${personLink(r.p)}<div class="small muted">${esc(r.p.title || "")}${who && !r.isNew ? " · medforfattere" : ""}</div></td><td>${esc(unitLabel(r.p))}</td><td><div class="chips">${shared.map(t => topicChip(t)).join("")}</div></td><td class="num">${r.topic.toFixed(2)}</td><td class="num">${r.theory.toFixed(2)}</td><td class="num"><b>${r.score.toFixed(2)}</b></td><td>${who ? `<a class="small" href="#/pair/${esc(who.id)}/${esc(r.p.id)}">par</a>` : ""}</td></tr>`; }).join("")}</table>`;
+        return `<tr><td>${i + 1}</td><td>${personLink(r.p)}<div class="small muted">${esc(r.p.title || "")}${who && !r.isNew ? " · medforfattere" : ""}</div></td><td>${esc(unitLabel(r.p))}</td><td><div class="chips">${shared.map(t => topicChip(t)).join("")}</div></td><td class="num">${r.joint == null ? "–" : r.joint}</td><td class="num">${r.topic.toFixed(2)}</td><td class="num">${r.theory.toFixed(2)}</td><td class="num"><b>${r.score.toFixed(2)}</b></td><td>${who ? `<a class="small" href="#/pair/${esc(who.id)}/${esc(r.p.id)}">par</a>` : ""}</td></tr>`; }).join("")}</table>`;
   };
   filterBar($("#bar"), [
     { id: "who", type: "text", label: "person (navn) …", list: "pnames2", width: 220 },
@@ -885,7 +886,7 @@ function viewScore() {
     SCOPE_FIELD(),
   ], f => { state = f; run(); });
   document.querySelectorAll("#weights input").forEach(x => x.addEventListener("input", run));
-  $("#csv").addEventListener("click", () => downloadCSV("lui-forslag.csv", [["rang", "navn", "institutt", "tittel", "tema", "teori", "score"], ...current.map((r, i) => [i + 1, r.p.name, unitLabel(r.p), r.p.title, r.topic.toFixed(2), r.theory.toFixed(2), r.score.toFixed(2)])]));
+  $("#csv").addEventListener("click", () => downloadCSV("lui-forslag.csv", [["rang", "navn", "institutt", "tittel", "felles_publ", "tema", "teori", "score"], ...current.map((r, i) => [i + 1, r.p.name, unitLabel(r.p), r.p.title, r.joint ?? "", r.topic.toFixed(2), r.theory.toFixed(2), r.score.toFixed(2)])]));
 }
 
 /* ---------------- seriation: Louvain on the filtered graph, spectral block ordering, best-of candidates ---------------- */
