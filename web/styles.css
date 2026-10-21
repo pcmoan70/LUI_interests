@@ -14,6 +14,8 @@ body { margin: 0; background: var(--bg); color: var(--fg); }
 a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
 .muted { color: var(--muted); }
+a.btn { display: inline-block; padding: 0.35rem 0.7rem; border: 1px solid var(--accent); border-radius: 6px; color: var(--accent); background: var(--card); font-size: 0.9rem; }
+a.btn:hover { background: var(--chip); text-decoration: none; }
 .small { font-size: 0.85em; }
 
 header.top { display: flex; align-items: center; gap: 1.5rem; padding: 0.6rem 1rem; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--bg); z-index: 5; flex-wrap: wrap; }

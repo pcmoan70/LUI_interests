@@ -79,6 +79,7 @@ Plan: see ../PLAN.md. Tick items as they are completed; add a Review section per
 - [x] All tables sortable by column (alphabetical / numeric, toggle direction); topic page gets the person-scope selector (user request 2026-10-21)
 - [x] Non-LUI persons shown as (Ekstern) / (OsloMet) instead of an institute code (user request 2026-10-21)
 - [x] Topic trend: one line per year, block value scales to fit; graph checkbox to include external coauthors as grey nodes (user requests 2026-10-21)
+- [x] Person page: direct links to Graf (focused, with externals), Finn samarbeid (person prefilled) and the interest matrix (user request 2026-10-21)
 - [ ] Playwright batch PDF export
 - [ ] nb/en toggle, accessibility pass
 

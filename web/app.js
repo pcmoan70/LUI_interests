@@ -338,6 +338,11 @@ async function viewPerson(id) {
     <h1>${esc(p.name)}</h1>
     <div class="muted">${p.listed ? `${esc(p.title || "")} · ${esc(unit?.name_nb || "")}` : `${esc(EXT_LABEL[p.type] || "ikke i ansattoversikten")}${p.aff ? ` · ${esc(p.aff)}${p.country ? ` (${esc(p.country)})` : ""}` : ""}${p.nJoint ? ` · ${p.nJoint} felles publikasjoner med LUI` : ""}`} ${p.url ? `· <a href="${esc(p.url)}" target="_blank" rel="noopener">profil på oslomet.no</a>` : ""}
       ${p.orcid ? `· <a href="https://orcid.org/${esc(p.orcid)}" target="_blank" rel="noopener">ORCID</a>` : ""} ${p.cristin ? `· <a href="https://app.cristin.no/persons/show.jsf?id=${esc(p.cristin)}" target="_blank" rel="noopener">Cristin</a>` : ""}</div>
+    <div class="toolbar no-print" style="margin:.5rem 0 .2rem">
+      <a class="btn" href="#/graph?focus=${encodeURIComponent(p.name)}&et=coauthor,cites&ext=1">Graf: ${esc(p.name)} og medforfattere →</a>
+      <a class="btn" href="#/score?who=${encodeURIComponent(p.name)}">Finn samarbeid for ${esc(p.name)} →</a>
+      <a class="btn" href="#/matrix?pp=${encodeURIComponent(p.id)}">Interessematrise →</a>
+    </div>
     ${p.bio ? `<p>${esc(p.bio)}</p>` : '<p class="muted">Ingen presentasjonstekst funnet.</p>'}
     <div class="cols">
       <div>
