@@ -80,6 +80,7 @@ Plan: see ../PLAN.md. Tick items as they are completed; add a Review section per
 - [x] Non-LUI persons shown as (Ekstern) / (OsloMet) instead of an institute code (user request 2026-10-21)
 - [x] Topic trend: one line per year, block value scales to fit; graph checkbox to include external coauthors as grey nodes (user requests 2026-10-21)
 - [x] Person page: direct links to Graf (focused, with externals), Finn samarbeid (person prefilled) and the interest matrix (user request 2026-10-21)
+- [x] Person → matrix link includes the 12 nearest persons by topic cosine; matrix labels untruncated with adaptive margins; Pages deploys with versioned asset/data URLs (cache busting) (user requests 2026-10-21)
 - [ ] Playwright batch PDF export
 - [ ] nb/en toggle, accessibility pass
 

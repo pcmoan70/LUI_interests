@@ -342,7 +342,7 @@ async function viewPerson(id) {
     <div class="toolbar no-print" style="margin:.5rem 0 .2rem">
       <a class="btn" href="#/graph?focus=${encodeURIComponent(p.name)}&et=coauthor,cites&ext=1">Graf: ${esc(p.name)} og medforfattere →</a>
       <a class="btn" href="#/score?who=${encodeURIComponent(p.name)}">Finn samarbeid for ${esc(p.name)} →</a>
-      <a class="btn" href="#/matrix?pp=${encodeURIComponent(p.id)}">Interessematrise →</a>
+      <a class="btn" href="#/matrix?pp=${encodeURIComponent([p.id, ...D.persons.filter(o => o.id !== id && o.listed && o.topics.length).map(o => ({ o, s: cosine(myVec, personVector(o)) })).sort((a, b) => b.s - a.s).slice(0, 12).map(x => x.o.id)].join(","))}" title="personen og de 12 med høyest tematisk likhet (cosinus)">Interessematrise: ${esc(p.name)} + 12 nærmeste →</a>
     </div>
     ${p.bio ? `<p>${esc(p.bio)}</p>` : '<p class="muted">Ingen presentasjonstekst funnet.</p>'}
     <div class="cols">
@@ -568,14 +568,17 @@ function viewMatrix() {
     else people.sort((a, b) => { const ma = macroOf(a.topics[0]?.t)?.i ?? 99, mb = macroOf(b.topics[0]?.t)?.i ?? 99; return ma - mb || (b.topics[0]?.s ?? 0) - (a.topics[0]?.s ?? 0); });
     lastPeople = people; lastTopics = topics;
     $("#f_count").textContent = `${people.length} personer × ${topics.length} tema${hasSel ? " (utvalg)" : ""}`;
-    const cw = topics.length <= 12 ? 30 : topics.length <= 30 ? 20 : 14, rh = people.length <= 15 ? 26 : people.length <= 40 ? 18 : 14, left = 180, top = 170;
+    const cw = topics.length <= 12 ? 30 : topics.length <= 30 ? 20 : 14, rh = people.length <= 15 ? 26 : people.length <= 40 ? 18 : 14;
+    const topicText = t => `${t.topic_id} ${t.label_nb || t.label_en}`;
+    const left = Math.min(420, 16 + 6.3 * Math.max(8, ...people.map(p => p.name.length)));
+    const top = Math.min(420, 20 + 0.87 * 5.9 * Math.max(10, ...topics.map(t => topicText(t).length)));
     const w = left + topics.length * cw + 10, h = top + people.length * rh + 10;
     const svg = d3.create("svg").attr("width", w).attr("height", h);
     const g = svg.append("g");
     g.selectAll("text.col").data(topics).join("text").attr("class", "col").attr("transform", (t, i) => `translate(${left + i * cw + cw / 2},${top - 4}) rotate(-60)`)
-      .attr("fill", t => macroColor(idx.macro.get(t.macro_id))).text(t => `${t.topic_id} ${(t.label_nb || t.label_en)}`.slice(0, 34)).style("cursor", "pointer").on("click", (e, t) => location.hash = `#/topic/${t.topic_id}`);
+      .attr("fill", t => macroColor(idx.macro.get(t.macro_id))).text(t => topicText(t)).style("cursor", "pointer").on("click", (e, t) => location.hash = `#/topic/${t.topic_id}`);
     g.selectAll("text.row").data(people).join("text").attr("class", "row").attr("x", left - 4).attr("y", (p, i) => top + i * rh + rh - 3).attr("text-anchor", "end")
-      .text(p => p.name.slice(0, 28)).style("cursor", "pointer").on("click", (e, p) => location.hash = `#/person/${p.id}`);
+      .text(p => p.name).style("cursor", "pointer").on("click", (e, p) => location.hash = `#/person/${p.id}`);
     const cells = [];
     const tpos = new Map(topics.map((t, j) => [t.topic_id, j]));
     people.forEach((p, i) => p.topics.forEach(t => { const j = tpos.get(t.t); if (j != null && t.s >= min) cells.push({ p, t, i, j }); }));
@@ -1077,7 +1080,9 @@ function viewRelMatrix() {
     lastOrder = order; lastCells = cells;
     const nBlocks = new Set(order.map(id => (lastSeriation.communities || idx.community).get(id) ?? -1)).size;
     $("#f_count").textContent = `${order.length} personer, ${edges.length} relasjoner · ${nBlocks} blokker · arrangementskostnad ${lastSeriation.cost != null ? lastSeriation.cost.toFixed(1) : "–"} (${lastSeriation.method || f.order || "blokk"})`;
-    const cw = Math.max(6, Math.min(14, Math.floor(900 / Math.max(1, order.length)))), left = 170, top = 170;
+    const cw = Math.max(6, Math.min(14, Math.floor(900 / Math.max(1, order.length))));
+    const longest = Math.max(8, ...order.map(id => (idx.person.get(id)?.name || id).length));
+    const left = Math.min(420, 16 + 6.3 * longest), top = Math.min(420, 20 + 0.87 * 6.3 * longest);
     const w = left + order.length * cw + 10, h = top + order.length * cw + 10;
     const svg = d3.create("svg").attr("width", w).attr("height", h);
     const g = svg.append("g");
@@ -1088,20 +1093,20 @@ function viewRelMatrix() {
     const unitColorM = d3.scaleOrdinal(d3.schemeTableau10).domain(D.meta.units.map(u => u.unit_id));
     const labelColor = id => lastSeriation.units ? unitColorM(lastSeriation.units.get(id)) : commColor(comm(id));
     g.selectAll("text.col").data(order).join("text").attr("class", "col").attr("transform", (id, i) => `translate(${left + i * cw + cw / 2},${top - 4}) rotate(-60)`)
-      .attr("fill", id => labelColor(id)).text(id => showLabels ? (idx.person.get(id)?.name || id).slice(0, 26) : "").style("cursor", "pointer").on("click", (e, id) => location.hash = `#/person/${id}`);
+      .attr("fill", id => labelColor(id)).text(id => showLabels ? (idx.person.get(id)?.name || id) : "").style("cursor", "pointer").on("click", (e, id) => location.hash = `#/person/${id}`);
     g.selectAll("text.row").data(order).join("text").attr("class", "row").attr("x", left - 4).attr("y", (id, i) => top + i * cw + cw - 2).attr("text-anchor", "end")
-      .attr("fill", id => labelColor(id)).text(id => showLabels ? (idx.person.get(id)?.name || id).slice(0, 26) : "").style("cursor", "pointer").on("click", (e, id) => location.hash = `#/person/${id}`);
+      .attr("fill", id => labelColor(id)).text(id => showLabels ? (idx.person.get(id)?.name || id) : "").style("cursor", "pointer").on("click", (e, id) => location.hash = `#/person/${id}`);
     const bounds = blockBoundaries(order);
     const ub = unitBoundaries(order);
     // institute bands along both axes (hierarchical mode)
     if (lastSeriation.units) {
       const runs = []; let startI = 0;
       for (let i = 1; i <= order.length; i++) if (i === order.length || lastSeriation.units.get(order[i]) !== lastSeriation.units.get(order[startI])) { runs.push([startI, i, lastSeriation.units.get(order[startI])]); startI = i; }
-      g.selectAll("rect.ub").data(runs).join("rect").attr("x", left - 170).attr("y", d => top + d[0] * cw).attr("width", 4).attr("height", d => (d[1] - d[0]) * cw).attr("fill", d => unitColorM(d[2]));
-      g.selectAll("rect.ubt").data(runs).join("rect").attr("y", top - 170).attr("x", d => left + d[0] * cw).attr("height", 4).attr("width", d => (d[1] - d[0]) * cw).attr("fill", d => unitColorM(d[2]));
-      g.selectAll("text.ul").data(runs.filter(d => (d[1] - d[0]) * cw > 24)).join("text").attr("class", "ul").attr("x", left - 162).attr("y", d => top + d[0] * cw + 10).attr("font-weight", "600").attr("fill", d => unitColorM(d[2])).text(d => unitKeyLabel(d[2]));
-      g.selectAll("line.ub").data(ub).join("line").attr("x1", left - 170).attr("x2", left + order.length * cw).attr("y1", i => top + i * cw).attr("y2", i => top + i * cw).attr("stroke", "currentColor").attr("stroke-opacity", 0.8).attr("stroke-width", 1.5);
-      g.selectAll("line.uc").data(ub).join("line").attr("y1", top - 170).attr("y2", top + order.length * cw).attr("x1", i => left + i * cw).attr("x2", i => left + i * cw).attr("stroke", "currentColor").attr("stroke-opacity", 0.8).attr("stroke-width", 1.5);
+      g.selectAll("rect.ub").data(runs).join("rect").attr("x", left - (left - 6)).attr("y", d => top + d[0] * cw).attr("width", 4).attr("height", d => (d[1] - d[0]) * cw).attr("fill", d => unitColorM(d[2]));
+      g.selectAll("rect.ubt").data(runs).join("rect").attr("y", top - (top - 6)).attr("x", d => left + d[0] * cw).attr("height", 4).attr("width", d => (d[1] - d[0]) * cw).attr("fill", d => unitColorM(d[2]));
+      g.selectAll("text.ul").data(runs.filter(d => (d[1] - d[0]) * cw > 24)).join("text").attr("class", "ul").attr("x", 10).attr("y", d => top + d[0] * cw + 10).attr("font-weight", "600").attr("fill", d => unitColorM(d[2])).text(d => unitKeyLabel(d[2]));
+      g.selectAll("line.ub").data(ub).join("line").attr("x1", 6).attr("x2", left + order.length * cw).attr("y1", i => top + i * cw).attr("y2", i => top + i * cw).attr("stroke", "currentColor").attr("stroke-opacity", 0.8).attr("stroke-width", 1.5);
+      g.selectAll("line.uc").data(ub).join("line").attr("y1", 6).attr("y2", top + order.length * cw).attr("x1", i => left + i * cw).attr("x2", i => left + i * cw).attr("stroke", "currentColor").attr("stroke-opacity", 0.8).attr("stroke-width", 1.5);
     }
     g.selectAll("line.b").data(bounds).join("line").attr("class", "b").attr("x1", left).attr("x2", left + order.length * cw).attr("y1", i => top + i * cw).attr("y2", i => top + i * cw).attr("stroke", "currentColor").attr("stroke-opacity", 0.35);
     g.selectAll("line.c").data(bounds).join("line").attr("class", "c").attr("y1", top).attr("y2", top + order.length * cw).attr("x1", i => left + i * cw).attr("x2", i => left + i * cw).attr("stroke", "currentColor").attr("stroke-opacity", 0.35);
