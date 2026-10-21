@@ -87,6 +87,7 @@ table.tbl th.sort-desc::after { content: " ▼"; font-size: 0.7em; }
 .matrix-wrap svg text { font-size: 10px; fill: var(--fg); }
 .matrix-wrap svg text.col:hover, .matrix-wrap svg text.row:hover { font-size: 15px !important; font-weight: 600; paint-order: stroke; stroke: var(--bg); stroke-width: 4px; }
 .matrix-wrap { overflow: auto; -webkit-overflow-scrolling: touch; touch-action: pan-x pan-y; cursor: grab; }
+.matrix-wrap:focus { outline: 2px solid var(--accent); outline-offset: -2px; }
 .matrix-wrap.dragging { cursor: grabbing; user-select: none; }
 #cy canvas { touch-action: none; }
 @media (max-width: 760px) { table.tbl { display: block; overflow-x: auto; white-space: nowrap; } .cols { grid-template-columns: 1fr; } }

@@ -1234,6 +1234,21 @@ function viewAbout() {
   let wrap = null, sx = 0, sy = 0, sl = 0, st = 0, moved = false;
   document.addEventListener("mousedown", ev => { const w = ev.target.closest(".matrix-wrap"); if (!w || ev.button !== 0) return; wrap = w; sx = ev.clientX; sy = ev.clientY; sl = w.scrollLeft; st = w.scrollTop; moved = false; });
   document.addEventListener("mousemove", ev => { if (!wrap) return; const dx = ev.clientX - sx, dy = ev.clientY - sy; if (!moved && Math.hypot(dx, dy) < 4) return; moved = true; wrap.classList.add("dragging"); wrap.scrollLeft = sl - dx; wrap.scrollTop = st - dy; ev.preventDefault(); });
+  // keyboard: arrows scroll the focused matrix sideways/vertically; PageUp/PageDown keep scrolling the page as usual
+  document.addEventListener("mousedown", ev => { const w = ev.target.closest(".matrix-wrap"); if (w) { w.tabIndex = 0; w.focus({ preventScroll: true }); } });
+  document.addEventListener("keydown", ev => {
+    const w = ev.target.closest ? ev.target.closest(".matrix-wrap") : null; if (!w) return;
+    const step = 80;
+    if (ev.key === "ArrowLeft") { w.scrollLeft -= step; ev.preventDefault(); }
+    else if (ev.key === "ArrowRight") { w.scrollLeft += step; ev.preventDefault(); }
+    else if (ev.key === "ArrowUp" || ev.key === "ArrowDown") {   // vertical: the matrix if it scrolls, otherwise the page as usual
+      const d = (ev.key === "ArrowDown" ? 1 : -1) * step;
+      if (w.scrollHeight > w.clientHeight + 2) { w.scrollTop += d; ev.preventDefault(); } else { window.scrollBy(0, d); ev.preventDefault(); }
+    }
+    else if (ev.key === "Home" && !ev.ctrlKey) { w.scrollLeft = 0; ev.preventDefault(); }
+    else if (ev.key === "End" && !ev.ctrlKey) { w.scrollLeft = w.scrollWidth; ev.preventDefault(); }
+    else if (ev.key === "PageDown" || ev.key === "PageUp") { window.scrollBy(0, (ev.key === "PageDown" ? 1 : -1) * innerHeight * 0.9); ev.preventDefault(); }
+  });
   const stop = () => { if (wrap) wrap.classList.remove("dragging"); wrap = null; };
   document.addEventListener("mouseup", stop); document.addEventListener("mouseleave", stop);
   // a drag must not count as a click on a cell or label
