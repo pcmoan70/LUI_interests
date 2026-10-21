@@ -1110,7 +1110,7 @@ function blockBoundaries(order) {
 function viewRelMatrix() {
   const app = $("#app");
   app.innerHTML = `<h1>Relasjonsmatrise: personer × personer</h1>
-    <p class="muted">Hver celle er en relasjon (medforfatterskap, sitering, felles gruppe/prosjekt eller tematisk likhet). Standardrekkefølgen er hierarkisk: institutter (ordnet etter hvor sterkt de henger sammen) → Louvain-fellesskap innenfor hvert institutt → spektral ordning innen hvert fellesskap, slik at hvert institutt og hvert fellesskap er en sammenhengende blokk langs diagonalen. Tykke linjer og fargebånd markerer institutter, tynne linjer fellesskap. «Flat blokkstruktur» optimaliserer i stedet hele utvalget under ett (laveste arrangementskostnad av flere kandidater).</p>
+    <p class="muted">Hver celle er en relasjon (medforfatterskap, sitering, felles gruppe/prosjekt eller tematisk likhet). Standardrekkefølgen er hierarkisk: institutter (ordnet etter hvor sterkt de henger sammen) → Louvain-fellesskap innenfor hvert institutt → spektral ordning innen hvert fellesskap, slik at hvert institutt og hvert fellesskap er en sammenhengende blokk langs diagonalen. Tykke linjer og fargebånd markerer institutter, tynne linjer fellesskap. Matrisen er symmetrisk for medforfatterskap, grupper, prosjekter og tematisk likhet; siteringer er rettet (rad siterer kolonne) og vises som standard også speilet med lysere farge, slå av «symmetrisk» for å se retningen alene. «Flat blokkstruktur» optimaliserer i stedet hele utvalget under ett (laveste arrangementskostnad av flere kandidater).</p>
     <div class="toolbar" id="bar"></div>
     <div class="legend">${Object.entries(EDGE_LABEL).map(([k, v]) => `<span><i style="background:${EDGE_COLOR[k]}"></i>${v}</span>`).join("")}</div>
     <div class="toolbar no-print"><button type="button" id="csv">Last ned matrise (CSV)</button></div>
@@ -1130,6 +1130,7 @@ function viewRelMatrix() {
     { id: "minCore", type: "number", label: "min. vitensk. publ." },
     { id: "order", type: "select", label: "rekkefølge", all: "hierarkisk: institutt → fellesskap → spektral", options: [["flat", "flat blokkstruktur (Louvain på utvalget)"], ["global", "blokkstruktur (hele fakultetet)"], ["unit", "institutt, alfabetisk"], ["name", "navn"]] },
     { id: "hideIso", type: "check", label: "skjul personer uten relasjoner", value: true },
+    { id: "symCites", type: "check", label: "symmetrisk (siteringer begge veier)", value: true },
     SCOPE_FIELD(),
   ], f => {
     const types = new Set((f.et || "").split(",").map(x => x.trim()).filter(Boolean));
@@ -1144,7 +1145,7 @@ function viewRelMatrix() {
     const cells = [];
     for (const e of edges) {
       const i = pos.get(e.s), j = pos.get(e.t);
-      cells.push({ i, j, e }); if (e.type !== "cites") cells.push({ i: j, j: i, e });
+      cells.push({ i, j, e }); if (e.type !== "cites" || f.symCites) cells.push({ i: j, j: i, e, rev: e.type === "cites" });
     }
     lastOrder = order; lastCells = cells;
     const nBlocks = new Set(order.map(id => (lastSeriation.communities || idx.community).get(id) ?? -1)).size;
@@ -1182,8 +1183,8 @@ function viewRelMatrix() {
     g.append("rect").attr("x", left).attr("y", top).attr("width", order.length * cw).attr("height", order.length * cw).attr("fill", "none").attr("stroke", "currentColor").attr("stroke-opacity", 0.2);
     const tip = $("#tip");
     g.selectAll("rect.cell").data(cells).join("rect").attr("class", "cell").attr("x", c => left + c.j * cw + 0.5).attr("y", c => top + c.i * cw + 0.5).attr("width", cw - 1).attr("height", cw - 1)
-      .attr("fill", c => EDGE_COLOR[c.e.type]).attr("fill-opacity", c => 0.35 + 0.65 * Math.min(1, c.e.w / 3)).style("cursor", "pointer")
-      .on("mousemove", (ev, c) => { tip.hidden = false; tip.style.left = ev.clientX + 12 + "px"; tip.style.top = ev.clientY + 12 + "px"; tip.textContent = `${idx.person.get(order[c.i])?.name} – ${idx.person.get(order[c.j])?.name}: ${EDGE_LABEL[c.e.type]} (vekt ${c.e.w}, ${c.e.n})${c.e.y0 ? ` ${c.e.y0}–${c.e.y1}` : ""}`; })
+      .attr("fill", c => EDGE_COLOR[c.e.type]).attr("fill-opacity", c => (c.rev ? 0.6 : 1) * (0.35 + 0.65 * Math.min(1, c.e.w / 3))).style("cursor", "pointer")
+      .on("mousemove", (ev, c) => { tip.hidden = false; tip.style.left = ev.clientX + 12 + "px"; tip.style.top = ev.clientY + 12 + "px"; tip.textContent = `${idx.person.get(order[c.i])?.name} ${c.e.type === "cites" ? (c.rev ? "siteres av" : "siterer") : "–"} ${idx.person.get(order[c.j])?.name}: ${EDGE_LABEL[c.e.type]} (vekt ${c.e.w}, ${c.e.n})${c.e.y0 ? ` ${c.e.y0}–${c.e.y1}` : ""}`; })
       .on("mouseleave", () => tip.hidden = true).on("click", (ev, c) => location.hash = `#/pair/${order[c.i]}/${order[c.j]}`);
     $("#mx").replaceChildren(svg.node());
   });
