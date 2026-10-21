@@ -33,6 +33,12 @@ h3 { font-size: 1rem; margin: 1rem 0 0.3rem; }
 .toolbar { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center; margin: 0.6rem 0 1rem; }
 .toolbar input[type=search], .toolbar select, .toolbar input[type=text] { padding: 0.4rem 0.6rem; border: 1px solid var(--line); border-radius: 6px; background: var(--card); color: var(--fg); font-size: 0.95rem; }
 .toolbar input[type=search] { min-width: 260px; flex: 1; }
+.toolbar details.multi { position: relative; }
+.toolbar details.multi summary { cursor: pointer; list-style: none; padding: 0.4rem 0.6rem; border: 1px solid var(--line); border-radius: 6px; background: var(--card); font-size: 0.9rem; white-space: nowrap; }
+.toolbar details.multi summary::-webkit-details-marker { display: none; }
+.toolbar details.multi summary::after { content: " ▾"; color: var(--muted); }
+.toolbar details.multi .menu { position: absolute; z-index: 6; margin-top: 4px; background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 0.5rem 0.7rem; display: grid; gap: 0.25rem; min-width: 220px; box-shadow: 0 4px 14px rgba(0,0,0,0.12); }
+.toolbar details.multi .menu label { color: var(--fg); font-size: 0.9rem; }
 .toolbar label { color: var(--muted); font-size: 0.85rem; display: flex; gap: 0.3rem; align-items: center; }
 
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 0.7rem; }
@@ -64,6 +70,10 @@ table.tbl th { color: var(--muted); font-weight: 500; }
 @media (max-width: 1000px) { .graph-wrap { grid-template-columns: 1fr; } }
 .panel { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 0.8rem; max-height: 72vh; overflow: auto; font-size: 0.9rem; }
 .legend { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; font-size: 0.8rem; margin: 0.4rem 0; }
+.legend [data-legend] { cursor: pointer; padding: 0 0.3rem; border-radius: 4px; border: 1px solid transparent; }
+.legend [data-legend]:hover { border-color: var(--line); }
+.legend [data-legend].on { border-color: var(--fg); font-weight: 600; }
+.legend [data-legend] i { border: 1px solid var(--line); }
 .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 0.3rem; vertical-align: -2px; }
 
 .matrix-wrap { overflow: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--card); }

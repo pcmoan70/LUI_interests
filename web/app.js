@@ -112,6 +112,9 @@ function filterBar(container, fields, onChange) {
     if (f.type === "range") return `<label>${esc(f.label)} <input type="range" id="f_${f.id}" min="${f.min}" max="${f.max}" step="${f.step}" value="${esc(v)}"><span id="f_${f.id}_v">${esc(v)}</span></label>`;
     if (f.type === "years") return `<label>år <input type="number" id="f_${f.id}0" min="${idx.minYear}" max="${idx.maxYear}" value="${esc(st[f.id + "0"] ?? "")}" placeholder="${idx.minYear}" style="width:5.5em"> – <input type="number" id="f_${f.id}1" min="${idx.minYear}" max="${idx.maxYear}" value="${esc(st[f.id + "1"] ?? "")}" placeholder="${idx.maxYear}" style="width:5.5em"></label>`;
     if (f.type === "number") return `<label>${esc(f.label)} <input type="number" id="f_${f.id}" min="0" value="${esc(v)}" style="width:4.5em"></label>`;
+    if (f.type === "multi") { const sel = new Set(String(v).split(",").map(x => x.trim()).filter(Boolean));
+      return `<details class="multi" id="f_${f.id}" data-label="${esc(f.label)}"><summary>${esc(f.label)}: <span class="sum">${esc(f.options.filter(([val]) => sel.has(val)).map(([, l]) => l).join(", ") || "ingen")}</span></summary>
+        <div class="menu">${f.options.map(([val, l]) => `<label><input type="checkbox" value="${esc(val)}" ${sel.has(val) ? "checked" : ""}> ${esc(l)}</label>`).join("")}</div></details>`; }
     return "";
   }).join("") + `<button type="button" id="f_reset" class="small">nullstill</button><span id="f_count" class="muted"></span>`;
   container.innerHTML = html;
@@ -120,6 +123,7 @@ function filterBar(container, fields, onChange) {
     for (const f of fields) {
       if (f.type === "years") { out[f.id + "0"] = $(`#f_${f.id}0`).value; out[f.id + "1"] = $(`#f_${f.id}1`).value; continue; }
       const el = $(`#f_${f.id}`);
+      if (f.type === "multi") { const vals = [...el.querySelectorAll("input:checked")].map(x => x.value); out[f.id] = vals.join(","); el.querySelector(".sum").textContent = f.options.filter(([val]) => vals.includes(val)).map(([, l]) => l).join(", ") || "ingen"; continue; }
       out[f.id] = f.type === "check" ? el.checked : el.value;
       if (f.type === "range") $(`#f_${f.id}_v`).textContent = el.value;
     }
@@ -127,7 +131,10 @@ function filterBar(container, fields, onChange) {
   };
   const fire = () => { const v = read(); setQS(v); onChange(v); };
   container.querySelectorAll("input, select").forEach(el => el.addEventListener("input", fire));
-  $("#f_reset").addEventListener("click", () => { setQS({}); container.querySelectorAll("input,select").forEach(el => { if (el.type === "checkbox") el.checked = !!fields.find(f => "f_" + f.id === el.id)?.value; else if (el.type === "range") el.value = fields.find(f => "f_" + f.id === el.id)?.value ?? el.min; else el.value = ""; }); fire(); });
+  $("#f_reset").addEventListener("click", () => { setQS({}); container.querySelectorAll("input,select").forEach(el => {
+      const multi = el.closest("details.multi");
+      if (multi) { const f = fields.find(f => "f_" + f.id === multi.id); el.checked = String(f?.value || "").split(",").includes(el.value); }
+      else if (el.type === "checkbox") el.checked = !!fields.find(f => "f_" + f.id === el.id)?.value; else if (el.type === "range") el.value = fields.find(f => "f_" + f.id === el.id)?.value ?? el.min; else el.value = ""; }); fire(); });
   const v = read(); onChange(v);
   return read;
 }
@@ -581,17 +588,20 @@ function viewGraph() {
       <div class="panel" id="side"><p class="muted">Klikk på en node eller kant for detaljer.</p></div></div>
     <datalist id="pnames">${D.persons.map(p => `<option value="${esc(p.name)}">`).join("")}</datalist>`;
   const st = getQS();
-  let sim = null, nodes = [], links = [], transform = d3.zoomIdentity, hover = null, selected = null, f = {};
+  let sim = null, nodes = [], links = [], transform = d3.zoomIdentity, hover = null, selected = null, f = {}, commFilter = null;
   const canvas = $("#gc"), ctx = canvas.getContext("2d");
   const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
   const unitColor = d3.scaleOrdinal(d3.schemeTableau10).domain(D.meta.units.map(u => u.unit_id));
   const commColor = d3.scaleOrdinal(d3.schemeTableau10);
   const nodeColor = p => f.color === "macro" ? macroColor(macroOf(p.topics[0]?.t)) : f.color === "community" ? commColor(idx.community.get(p.id) ?? -1) : unitColor(p.unit);
 
-  function size() { let r = canvas.parentElement.getBoundingClientRect(); if (r.width < 50 || r.height < 50) r = { width: Math.max(r.width, 900), height: Math.max(r.height, 600) };   // hidden/collapsed pane
-    const dpr = devicePixelRatio || 1; canvas.width = r.width * dpr; canvas.height = r.height * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); return r; }
+  let view = { width: 900, height: 600 };
+  function size() { const b = canvas.getBoundingClientRect(); let w = Math.floor(b.width), h = Math.floor(b.height);
+    if (w < 50 || h < 50) { w = Math.max(w, 900); h = Math.max(h, 600); }   // hidden/collapsed pane
+    const dpr = devicePixelRatio || 1; canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); view = { width: w, height: h }; return view; }
   function draw() {
-    const r = canvas.getBoundingClientRect(); ctx.save(); ctx.clearRect(0, 0, r.width, r.height);
+    const r = view; ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.restore();
+    ctx.save();
     ctx.translate(transform.x, transform.y); ctx.scale(transform.k, transform.k);
     const fg = css("--fg") || "#222";
     const nbSel = new Set(); if (selected) { nbSel.add(selected.id); for (const l of links) { if (l.source.id === selected.id) nbSel.add(l.target.id); if (l.target.id === selected.id) nbSel.add(l.source.id); } }
@@ -640,7 +650,7 @@ function viewGraph() {
   addEventListener("resize", () => { if (document.body.contains(canvas)) { size(); draw(); } });
 
   filterBar($("#bar"), [
-    { id: "et", type: "text", label: "kanttyper: coauthor,cites,shared_group,shared_project,topic_similarity", value: st.et ?? "coauthor,cites", width: 300 },
+    { id: "et", type: "multi", label: "kanttyper", options: Object.entries(EDGE_LABEL), value: "coauthor,cites" },
     { id: "unit", type: "select", label: "institutt", options: unitOptions() },
     { id: "type", type: "select", label: "stilling", options: [["academic", "vitenskapelig"], ["admin", "administrativ"], ["former_lui", "tidligere/annen LUI"], ["oslomet", "annen OsloMet"], ["external", "ekstern"]] },
     { id: "macro", type: "select", label: "makrotema", options: macroOptions() },
@@ -655,8 +665,17 @@ function viewGraph() {
     { id: "focus", type: "text", label: "fokuser på person …", list: "pnames" },
     { id: "hideIso", type: "check", label: "skjul isolerte", value: true },
     SCOPE_FIELD(),
-  ], state => {
-    f = state;
+  ], state => { f = state; apply(); });
+  $("#legend").addEventListener("click", ev => {
+    const el = ev.target.closest("[data-legend]"); if (!el) return;
+    const [kind, val] = el.dataset.legend.split(":");
+    const set = (id, v) => { const c = $(id); if (!c) return; c.value = c.value === v ? "" : v; c.dispatchEvent(new Event("input", { bubbles: true })); };
+    if (kind === "unit") set("#f_unit", val);
+    else if (kind === "macro") set("#f_macro", val);
+    else if (kind === "et") { const cb = $(`#f_et input[value="${val}"]`); if (cb) { cb.checked = !cb.checked; cb.dispatchEvent(new Event("input", { bubbles: true })); } }
+    else if (kind === "comm") { commFilter = commFilter === +val ? null : +val; apply(); }
+  });
+  function apply() {
     const types = new Set((f.et || "coauthor,cites").split(",").map(s => s.trim()).filter(Boolean));
     const [y0, y1] = yearRange(f); const yearsSet = f.y0 || f.y1;
     const minw = +f.minw || 0, spread = +f.spread || 1.5;
@@ -664,15 +683,20 @@ function viewGraph() {
     let edges = D.edges.filter(e => types.has(e.type) && e.w >= minw && (!yearsSet || !e.y0 || overlaps([e.y0, e.y1], [y0, y1])));
     let people = D.persons.filter(p => personMatches(p, { ...f, y0: "", y1: "" }) || (focus && p.id === focus.id));
     if (yearsSet) people = people.filter(p => focus?.id === p.id || activeIn(p, y0, y1));
+    if (commFilter != null) people = people.filter(p => (idx.community.get(p.id) ?? -1) === commFilter || focus?.id === p.id);
     let ids = new Set(people.map(p => p.id));
     if (focus) { const nb = new Set([focus.id]); for (const e of edges) { if (e.s === focus.id) nb.add(e.t); if (e.t === focus.id) nb.add(e.s); } ids = new Set([...ids].filter(i => nb.has(i))); people = D.persons.filter(p => ids.has(p.id)); }
     edges = edges.filter(e => ids.has(e.s) && ids.has(e.t));
     if (f.hideIso) { const deg = new Set(); edges.forEach(e => { deg.add(e.s); deg.add(e.t); }); people = people.filter(p => deg.has(p.id)); }
-    $("#legend").innerHTML = (f.color === "macro" ? D.taxonomy.macro.map(m => `<span><i style="background:${macroColor(idx.macro.get(m.macro_id))}"></i>${esc(m.label_nb || m.label_en)}</span>`)
-      : f.color === "community" ? [`<span class="muted">farge = Louvain-fellesskap</span>`]
-      : D.meta.units.filter(u => u.short_code !== "LUI").map(u => `<span><i style="background:${unitColor(u.unit_id)}"></i>${esc(u.short_code)}</span>`)).join("") +
-      [...types].map(t => `<span><i style="background:${EDGE_COLOR[t]}"></i>${EDGE_LABEL[t] || t}</span>`).join("") +
-      (f.scope ? `<span><i style="background:#9a9a9a"></i>utenfor LUI</span>` : "");
+    // legend: every swatch is a toggle filter
+    const item = (key, color, label, on) => `<span data-legend="${esc(key)}" class="${on ? "on" : ""}" title="klikk for å filtrere"><i style="background:${color}"></i>${esc(label)}</span>`;
+    const commCounts = new Map(); for (const p of people) { const c = idx.community.get(p.id) ?? -1; commCounts.set(c, (commCounts.get(c) || 0) + 1); }
+    $("#legend").innerHTML = (f.color === "macro" ? D.taxonomy.macro.map(m => item(`macro:${m.macro_id}`, macroColor(idx.macro.get(m.macro_id)), m.label_nb || m.label_en, f.macro === m.macro_id))
+      : f.color === "community" ? [...commCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 14).map(([c, n]) => item(`comm:${c}`, commColor(c), `fellesskap ${c} (${n})`, commFilter === c))
+      : D.meta.units.filter(u => u.short_code !== "LUI").map(u => item(`unit:${u.unit_id}`, unitColor(u.unit_id), u.short_code, f.unit === u.unit_id))).join("") +
+      Object.keys(EDGE_LABEL).map(t => item(`et:${t}`, types.has(t) ? EDGE_COLOR[t] : "transparent", EDGE_LABEL[t], types.has(t))).join("") +
+      (f.scope ? `<span><i style="background:#9a9a9a"></i>utenfor LUI</span>` : "") +
+      (commFilter != null && f.color !== "community" ? `<span data-legend="comm:${commFilter}" class="on"><i style="background:${commColor(commFilter)}"></i>fellesskap ${commFilter} ×</span>` : "");
     // keep positions of nodes that survive a filter change so the layout stays calm
     const old = new Map(nodes.map(n => [n.id, n]));
     const r = size();
@@ -682,7 +706,7 @@ function viewGraph() {
     selected = focus ? byId.get(focus.id) || null : null; hover = null;
     sim?.stop();
     const deg = new Map(); for (const l of links) { deg.set(l.source.id, (deg.get(l.source.id) || 0) + 1); deg.set(l.target.id, (deg.get(l.target.id) || 0) + 1); }
-    const fit = (animate = true) => { if (!nodes.length) return; const xs = nodes.map(n => n.x), ys = nodes.map(n => n.y); const x0 = Math.min(...xs) - 30, x1 = Math.max(...xs) + 30, y0 = Math.min(...ys) - 30, y1 = Math.max(...ys) + 30;
+    const fit = (animate = true) => { const fin = nodes.filter(n => isFinite(n.x) && isFinite(n.y)); if (!fin.length) return; const xs = fin.map(n => n.x), ys = fin.map(n => n.y); const x0 = Math.min(...xs) - 50, x1 = Math.max(...xs) + 50, y0 = Math.min(...ys) - 50, y1 = Math.max(...ys) + 50;
       const k = Math.min(4, 0.95 / Math.max((x1 - x0) / r.width, (y1 - y0) / r.height)); const t = d3.zoomIdentity.translate(r.width / 2 - k * (x0 + x1) / 2, r.height / 2 - k * (y0 + y1) / 2).scale(k);
       if (animate) d3.select(canvas).transition().duration(600).call(zoom.transform, t); else d3.select(canvas).call(zoom.transform, t); };
     sim = d3.forceSimulation(nodes)
@@ -698,12 +722,51 @@ function viewGraph() {
     sim.stop();
     const warm = Math.max(60, Math.min(250, Math.floor(400000 / Math.max(1, links.length + 10 * nodes.length))));
     for (let i = 0; i < warm; i++) sim.tick();
+    // connected components: keep small ones on a ring around the giant component instead of letting them drift to the edge
+    const compOf = new Map(nodes.map(n => [n.id, n.id]));
+    const find = x => { while (compOf.get(x) !== x) { compOf.set(x, compOf.get(compOf.get(x))); x = compOf.get(x); } return x; };
+    for (const l of links) { const a = find(l.source.id), b = find(l.target.id); if (a !== b) compOf.set(a, b); }
+    const comps = new Map(); for (const n of nodes) { const c = find(n.id); if (!comps.has(c)) comps.set(c, []); comps.get(c).push(n); }
+    const ordered = [...comps.values()].sort((a, b) => b.length - a.length);
+    if (ordered.length > 1 && ordered[0].length >= 3) {
+      const giant = ordered[0], small = ordered.slice(1);
+      const radii = small.map(c => 10 + 9 * Math.sqrt(c.length));
+      for (const c of small) for (const n of c) n.small = true;
+      // place the small components on a ring around the giant component's current extent
+      const placeRing = () => {
+        const cx = d3.mean(giant, n => n.x), cy = d3.mean(giant, n => n.y);
+        const R = Math.max(80, d3.quantile(giant.map(n => Math.hypot(n.x - cx, n.y - cy)).filter(isFinite).sort(d3.ascending), 0.9) || 80);
+        let ring = R + 35, ang = -Math.PI / 2, start = 0;
+        const steps = radii.map(r => (2 * r + 14) / ring);
+        const total = d3.sum(steps), scale = total < 2 * Math.PI ? 2 * Math.PI / total : 1;
+        for (let i = 0; i < small.length; i++) {
+          const step = steps[i] * scale;
+          if (scale === 1 && i > start && ang + Math.PI / 2 + step > 2 * Math.PI) { ring += 2 * Math.max(...radii.slice(start, i)) + 30; ang = -Math.PI / 2; start = i; }
+          if (!isFinite(ring)) ring = R + 35;
+          ang += step / 2;
+          const tx = cx + ring * Math.cos(ang), ty = cy + ring * Math.sin(ang);
+          for (const n of small[i]) { n.tx = tx; n.ty = ty; }
+          ang += step / 2;
+        }
+      };
+      // targets must exist before the forces read them; distanceMax takes a number
+      placeRing(); for (const c of small) for (const n of c) { n.x = n.tx + (Math.random() - 0.5) * 20; n.y = n.ty + (Math.random() - 0.5) * 20; }
+      const setForces = () => sim
+        .force("x", d3.forceX(n => n.small ? n.tx : r.width / 2).strength(n => n.small ? 0.35 : 0.03 / spread))
+        .force("y", d3.forceY(n => n.small ? n.ty : r.height / 2).strength(n => n.small ? 0.35 : 0.035 / spread))
+        .force("charge", d3.forceManyBody().strength(n => n.small ? -15 : -(60 + 4 * n.r) * spread).distanceMax(700 * spread).theta(0.9));
+      setForces();
+      sim.alpha(0.5); for (let i = 0; i < 60; i++) sim.tick();
+      // the giant settles during these ticks, so re-place the ring on its final extent before the last ticks
+      placeRing(); setForces();
+      sim.alpha(0.3); for (let i = 0; i < 50; i++) sim.tick();
+    }
     fit(false);
-    sim.alpha(0.25).restart();
+    sim.alpha(0.2).restart();
     if (selected) showNode(selected);
     $("#f_count").textContent = `${people.length} personer, ${edges.length} relasjoner`;
     draw();
-  });
+  }
 }
 
 /* ---------------- scoring ---------------- */
@@ -879,14 +942,44 @@ function orderByBlocks(comp, comm, adj) {
   for (const k of keyOrder) { const b = blocks.get(k); out.push(...(b.length <= 400 ? spectralOrder(b, adj) : rcmOrder(new Set(b), adj))); }
   return out;
 }
+/** Group key for the top level of the hierarchy: department for LUI staff, category for others. */
+const unitKeyOf = p => p.listed || !p.type || p.type === "former_lui" ? (p.unit || "LUI") : p.type;
+const unitKeyLabel = k => idx.unit.get(k)?.short_code || EXT_LABEL[k] || k;
+/** Hierarchical: institutes (ordered by mutual connectivity) -> Louvain communities within each institute -> spectral order. */
+function seriateHierarchical(ids, adj) {
+  const groups = new Map();
+  for (const id of ids) { const k = unitKeyOf(idx.person.get(id) || {}); if (!groups.has(k)) groups.set(k, []); groups.get(k).push(id); }
+  const keys = [...groups.keys()];
+  const gadj = new Map(keys.map(k => [k, new Map()]));
+  const keyOf = new Map(); for (const [k, members] of groups) for (const id of members) keyOf.set(id, k);
+  for (const id of ids) for (const [nb, w] of adj.get(id) || []) { const a = keyOf.get(id), b = keyOf.get(nb); if (a !== b && b != null) gadj.get(a).set(b, (gadj.get(a).get(b) || 0) + w); }
+  const keyOrder = keys.length > 3 ? spectralOrder(keys, gadj) : keys.sort((a, b) => groups.get(b).length - groups.get(a).length);
+  const comm = new Map(); const order = [];
+  for (const k of keyOrder) {
+    const members = groups.get(k);
+    const sub = new Map(members.map(id => [id, new Map([...(adj.get(id) || [])].filter(([nb]) => keyOf.get(nb) === k))]));
+    const comps = components(members, sub);
+    const lv = louvain(members, sub, 1);
+    for (const comp of comps) {
+      const ordered = comp.length <= 2 ? comp : orderByBlocks(comp, lv, sub);
+      for (const id of ordered) { comm.set(id, `${k}|${lv.get(id)}`); order.push(id); }
+    }
+  }
+  return { order, comm };
+}
 /** Order person ids so that the filtered relation matrix is as block-diagonal as possible. */
-let lastSeriation = { cost: null, communities: null, method: "" };
+let lastSeriation = { cost: null, communities: null, method: "", units: null };
 function seriate(ids, edges, mode = "block") {
   const people = ids.map(id => idx.person.get(id)).filter(Boolean);
   if (mode === "name") return people.sort((a, b) => a.name.localeCompare(b.name, "nb")).map(p => p.id);
   if (mode === "unit") return people.sort((a, b) => (a.unit || "").localeCompare(b.unit || "") || a.name.localeCompare(b.name, "nb")).map(p => p.id);
   const adj = buildAdj(ids, edges);
-  if (mode === "global") { const o = people.sort((a, b) => (idx.personOrder.get(a.id) ?? 1e9) - (idx.personOrder.get(b.id) ?? 1e9)).map(p => p.id); lastSeriation = { cost: arrangementCost(o, adj), communities: idx.community, method: "global" }; return o; }
+  if (mode === "block") {   // default: hierarchical institute -> community -> spectral
+    const h = seriateHierarchical(ids, adj);
+    lastSeriation = { cost: arrangementCost(h.order, adj), communities: h.comm, method: "hierarkisk: institutt → fellesskap → spektral", units: new Map(h.order.map(id => [id, unitKeyOf(idx.person.get(id) || {})])) };
+    return h.order;
+  }
+  if (mode === "global") { const o = people.sort((a, b) => (idx.personOrder.get(a.id) ?? 1e9) - (idx.personOrder.get(b.id) ?? 1e9)).map(p => p.id); lastSeriation = { cost: arrangementCost(o, adj), communities: idx.community, method: "global", units: null }; return o; }
   const comps = components(ids, adj);
   const candidates = [];
   // (a) Louvain on the filtered graph (two seeds) + spectral ordering of and within blocks
@@ -901,8 +994,14 @@ function seriate(ids, edges, mode = "block") {
   candidates.push({ order: comps.flatMap(c => c.length <= 400 ? spectralOrder(c, adj) : rcmOrder(new Set(c), adj)), comm: candidates[0].comm, method: "spectral" });
   for (const c of candidates) c.cost = arrangementCost(c.order, adj);
   candidates.sort((a, b) => a.cost - b.cost);
-  lastSeriation = { cost: candidates[0].cost, communities: candidates[0].comm, method: candidates[0].method };
+  lastSeriation = { cost: candidates[0].cost, communities: candidates[0].comm, method: candidates[0].method, units: null };
   return candidates[0].order;
+}
+function unitBoundaries(order) {
+  const u = lastSeriation.units, b = [];
+  if (!u) return b;
+  for (let i = 1; i < order.length; i++) if (u.get(order[i]) !== u.get(order[i - 1])) b.push(i);
+  return b;
 }
 function blockBoundaries(order) {
   const comm = lastSeriation.communities || idx.community, b = [];
@@ -914,7 +1013,7 @@ function blockBoundaries(order) {
 function viewRelMatrix() {
   const app = $("#app");
   app.innerHTML = `<h1>Relasjonsmatrise: personer × personer</h1>
-    <p class="muted">Hver celle er en relasjon (medforfatterskap, sitering, felles gruppe/prosjekt eller tematisk likhet). Rekkefølgen optimaliseres for det viste utvalget: komponenter → Louvain-fellesskap på det filtrerte nettverket → spektral ordning av blokkene og innen hver blokk; flere kandidater prøves og den med lavest lineær arrangementskostnad (gjennomsnittlig avstand fra diagonalen, vektet) velges. Linjer markerer blokkgrenser.</p>
+    <p class="muted">Hver celle er en relasjon (medforfatterskap, sitering, felles gruppe/prosjekt eller tematisk likhet). Standardrekkefølgen er hierarkisk: institutter (ordnet etter hvor sterkt de henger sammen) → Louvain-fellesskap innenfor hvert institutt → spektral ordning innen hvert fellesskap, slik at hvert institutt og hvert fellesskap er en sammenhengende blokk langs diagonalen. Tykke linjer og fargebånd markerer institutter, tynne linjer fellesskap. «Flat blokkstruktur» optimaliserer i stedet hele utvalget under ett (laveste arrangementskostnad av flere kandidater).</p>
     <div class="toolbar" id="bar"></div>
     <div class="legend">${Object.entries(EDGE_LABEL).map(([k, v]) => `<span><i style="background:${EDGE_COLOR[k]}"></i>${v}</span>`).join("")}</div>
     <div class="toolbar no-print"><button type="button" id="csv">Last ned matrise (CSV)</button></div>
@@ -922,7 +1021,7 @@ function viewRelMatrix() {
   let lastOrder = [], lastCells = [];
   const st = getQS();
   filterBar($("#bar"), [
-    { id: "et", type: "text", label: "kanttyper: coauthor,cites,shared_group,shared_project,topic_similarity", value: st.et ?? "coauthor,cites,shared_project", width: 300 },
+    { id: "et", type: "multi", label: "kanttyper (brukes i klyngingen)", options: Object.entries(EDGE_LABEL), value: "coauthor,cites,shared_project" },
     { id: "unit", type: "select", label: "institutt", options: unitOptions() },
     { id: "type", type: "select", label: "stilling", options: [["academic", "vitenskapelig"], ["admin", "administrativ"], ["former_lui", "tidligere/annen LUI"], ["oslomet", "annen OsloMet"], ["external", "ekstern"]] },
     { id: "macro", type: "select", label: "makrotema", options: macroOptions() },
@@ -932,7 +1031,7 @@ function viewRelMatrix() {
     { id: "y", type: "years" },
     { id: "minw", type: "range", label: "min. vekt", min: 0, max: 5, step: 0.25, value: 0 },
     { id: "minCore", type: "number", label: "min. vitensk. publ." },
-    { id: "order", type: "select", label: "rekkefølge", all: "blokkstruktur (optimalisert på utvalget)", options: [["global", "blokkstruktur (hele fakultetet)"], ["unit", "institutt"], ["name", "navn"]] },
+    { id: "order", type: "select", label: "rekkefølge", all: "hierarkisk: institutt → fellesskap → spektral", options: [["flat", "flat blokkstruktur (Louvain på utvalget)"], ["global", "blokkstruktur (hele fakultetet)"], ["unit", "institutt, alfabetisk"], ["name", "navn"]] },
     { id: "hideIso", type: "check", label: "skjul personer uten relasjoner", value: true },
     SCOPE_FIELD(),
   ], f => {
@@ -943,7 +1042,7 @@ function viewRelMatrix() {
     let ids = new Set(people.map(p => p.id));
     let edges = D.edges.filter(e => types.has(e.type) && e.w >= (+f.minw || 0) && ids.has(e.s) && ids.has(e.t) && (!yearsSet || !e.y0 || overlaps([e.y0, e.y1], [y0, y1])));
     if (f.hideIso) { const deg = new Set(); edges.forEach(e => { deg.add(e.s); deg.add(e.t); }); ids = new Set([...ids].filter(i => deg.has(i))); }
-    const order = seriate([...ids], edges, f.order || "block");
+    const order = seriate([...ids], edges, f.order === "flat" ? "flatblock" : (f.order || "block"));
     const pos = new Map(order.map((id, i) => [id, i]));
     const cells = [];
     for (const e of edges) {
@@ -961,11 +1060,24 @@ function viewRelMatrix() {
     const commMap = lastSeriation.communities || idx.community;
     const comm = id => commMap.get(id) ?? -1;
     const commColor = d3.scaleOrdinal(d3.schemeTableau10);
+    const unitColorM = d3.scaleOrdinal(d3.schemeTableau10).domain(D.meta.units.map(u => u.unit_id));
+    const labelColor = id => lastSeriation.units ? unitColorM(lastSeriation.units.get(id)) : commColor(comm(id));
     g.selectAll("text.col").data(order).join("text").attr("class", "col").attr("transform", (id, i) => `translate(${left + i * cw + cw / 2},${top - 4}) rotate(-60)`)
-      .attr("fill", id => commColor(comm(id))).text(id => showLabels ? (idx.person.get(id)?.name || id).slice(0, 26) : "").style("cursor", "pointer").on("click", (e, id) => location.hash = `#/person/${id}`);
+      .attr("fill", id => labelColor(id)).text(id => showLabels ? (idx.person.get(id)?.name || id).slice(0, 26) : "").style("cursor", "pointer").on("click", (e, id) => location.hash = `#/person/${id}`);
     g.selectAll("text.row").data(order).join("text").attr("class", "row").attr("x", left - 4).attr("y", (id, i) => top + i * cw + cw - 2).attr("text-anchor", "end")
-      .attr("fill", id => commColor(comm(id))).text(id => showLabels ? (idx.person.get(id)?.name || id).slice(0, 26) : "").style("cursor", "pointer").on("click", (e, id) => location.hash = `#/person/${id}`);
+      .attr("fill", id => labelColor(id)).text(id => showLabels ? (idx.person.get(id)?.name || id).slice(0, 26) : "").style("cursor", "pointer").on("click", (e, id) => location.hash = `#/person/${id}`);
     const bounds = blockBoundaries(order);
+    const ub = unitBoundaries(order);
+    // institute bands along both axes (hierarchical mode)
+    if (lastSeriation.units) {
+      const runs = []; let startI = 0;
+      for (let i = 1; i <= order.length; i++) if (i === order.length || lastSeriation.units.get(order[i]) !== lastSeriation.units.get(order[startI])) { runs.push([startI, i, lastSeriation.units.get(order[startI])]); startI = i; }
+      g.selectAll("rect.ub").data(runs).join("rect").attr("x", left - 170).attr("y", d => top + d[0] * cw).attr("width", 4).attr("height", d => (d[1] - d[0]) * cw).attr("fill", d => unitColorM(d[2]));
+      g.selectAll("rect.ubt").data(runs).join("rect").attr("y", top - 170).attr("x", d => left + d[0] * cw).attr("height", 4).attr("width", d => (d[1] - d[0]) * cw).attr("fill", d => unitColorM(d[2]));
+      g.selectAll("text.ul").data(runs.filter(d => (d[1] - d[0]) * cw > 24)).join("text").attr("class", "ul").attr("x", left - 162).attr("y", d => top + d[0] * cw + 10).attr("font-weight", "600").attr("fill", d => unitColorM(d[2])).text(d => unitKeyLabel(d[2]));
+      g.selectAll("line.ub").data(ub).join("line").attr("x1", left - 170).attr("x2", left + order.length * cw).attr("y1", i => top + i * cw).attr("y2", i => top + i * cw).attr("stroke", "currentColor").attr("stroke-opacity", 0.8).attr("stroke-width", 1.5);
+      g.selectAll("line.uc").data(ub).join("line").attr("y1", top - 170).attr("y2", top + order.length * cw).attr("x1", i => left + i * cw).attr("x2", i => left + i * cw).attr("stroke", "currentColor").attr("stroke-opacity", 0.8).attr("stroke-width", 1.5);
+    }
     g.selectAll("line.b").data(bounds).join("line").attr("class", "b").attr("x1", left).attr("x2", left + order.length * cw).attr("y1", i => top + i * cw).attr("y2", i => top + i * cw).attr("stroke", "currentColor").attr("stroke-opacity", 0.35);
     g.selectAll("line.c").data(bounds).join("line").attr("class", "c").attr("y1", top).attr("y2", top + order.length * cw).attr("x1", i => left + i * cw).attr("x2", i => left + i * cw).attr("stroke", "currentColor").attr("stroke-opacity", 0.35);
     g.append("rect").attr("x", left).attr("y", top).attr("width", order.length * cw).attr("height", order.length * cw).attr("fill", "none").attr("stroke", "currentColor").attr("stroke-opacity", 0.2);
