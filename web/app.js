@@ -745,7 +745,7 @@ function viewGraph() {
     { id: "minw", type: "range", label: "min. vekt", min: 0, max: 5, step: 0.25, value: 0.5 },
     { id: "minCore", type: "number", label: "min. vitensk. publ." },
     { id: "color", type: "select", label: "farge", all: "institutt", options: [["macro", "makrotema"], ["community", "fellesskap (Louvain)"]] },
-    { id: "spread", type: "range", label: "spredning", min: 0.5, max: 3, step: 0.25, value: 1.5 },
+    { id: "spread", type: "range", label: "spredning", min: 0.5, max: 4, step: 0.25, value: 2.25 },
     { id: "focus", type: "text", label: "fokuser på person …", list: "pnames" },
     { id: "hideIso", type: "check", label: "skjul isolerte", value: true },
     { id: "ext", type: "check", label: "ta med eksterne medforfattere (grå)" },
@@ -763,7 +763,7 @@ function viewGraph() {
   function apply() {
     const types = new Set((f.et || "coauthor,cites").split(",").map(s => s.trim()).filter(Boolean));
     const [y0, y1] = yearRange(f); const yearsSet = f.y0 || f.y1;
-    const minw = +f.minw || 0, spread = +f.spread || 1.5;
+    const minw = +f.minw || 0, spread = +f.spread || 2.25;
     const focus = f.focus ? D.persons.find(p => p.name.toLowerCase() === f.focus.toLowerCase()) : null;
     let edges = D.edges.filter(e => types.has(e.type) && e.w >= minw && (!yearsSet || !e.y0 || overlaps([e.y0, e.y1], [y0, y1])));
     let people = D.persons.filter(p => personMatches(p, { ...f, y0: "", y1: "" }) || (focus && p.id === focus.id));
@@ -801,12 +801,12 @@ function viewGraph() {
       if (animate) d3.select(canvas).transition().duration(600).call(zoom.transform, t); else d3.select(canvas).call(zoom.transform, t); };
     fitFn = fit;
     sim = d3.forceSimulation(nodes)
-      .force("link", d3.forceLink(links).id(n => n.id).distance(l => (40 + 80 / (1 + Math.log2(1 + l.w))) * spread)
-        .strength(l => Math.min(0.8, (0.3 + 0.1 * Math.log2(1 + l.w)) / Math.sqrt(Math.min(deg.get(l.source.id) || 1, deg.get(l.target.id) || 1)))))
-      .force("charge", d3.forceManyBody().strength(n => -(60 + 4 * n.r) * spread).distanceMax(700 * spread).theta(0.9))
-      .force("collide", d3.forceCollide().radius(n => n.r + 4).iterations(2))
-      .force("x", d3.forceX(r.width / 2).strength(0.03 / spread))
-      .force("y", d3.forceY(r.height / 2).strength(0.035 / spread))
+      .force("link", d3.forceLink(links).id(n => n.id).distance(l => (55 + 110 / (1 + Math.log2(1 + l.w))) * spread)
+        .strength(l => Math.min(0.7, (0.25 + 0.1 * Math.log2(1 + l.w)) / Math.sqrt(Math.min(deg.get(l.source.id) || 1, deg.get(l.target.id) || 1)))))
+      .force("charge", d3.forceManyBody().strength(n => -(110 + 6 * n.r) * spread).distanceMax(900 * spread).theta(0.9))
+      .force("collide", d3.forceCollide().radius(n => n.r + 9).iterations(3))
+      .force("x", d3.forceX(r.width / 2).strength(0.015 / spread))
+      .force("y", d3.forceY(r.height / 2).strength(0.018 / spread))
       .alpha(1).alphaDecay(0.018).velocityDecay(0.3)
       .on("tick", draw).on("end", () => fit(true, egoFit));
     // warm up synchronously so the layout is settled at once (and works when requestAnimationFrame is paused)
@@ -821,14 +821,14 @@ function viewGraph() {
     const ordered = [...comps.values()].sort((a, b) => b.length - a.length);
     if (ordered.length > 1 && ordered[0].length >= 3) {
       const giant = ordered[0], small = ordered.slice(1);
-      const radii = small.map(c => 10 + 9 * Math.sqrt(c.length));
+      const radii = small.map(c => 14 + 14 * Math.sqrt(c.length));
       for (const c of small) for (const n of c) n.small = true;
       // place the small components on a ring around the giant component's current extent
       const placeRing = () => {
         const cx = d3.mean(giant, n => n.x), cy = d3.mean(giant, n => n.y);
         const R = Math.max(80, d3.quantile(giant.map(n => Math.hypot(n.x - cx, n.y - cy)).filter(isFinite).sort(d3.ascending), 0.9) || 80);
-        let ring = R + 35, ang = -Math.PI / 2, start = 0;
-        const steps = radii.map(r => (2 * r + 14) / ring);
+        let ring = R + 90, ang = -Math.PI / 2, start = 0;
+        const steps = radii.map(r => (2 * r + 40) / ring);
         const total = d3.sum(steps), scale = total < 2 * Math.PI ? 2 * Math.PI / total : 1;
         for (let i = 0; i < small.length; i++) {
           const step = steps[i] * scale;
@@ -843,9 +843,9 @@ function viewGraph() {
       // targets must exist before the forces read them; distanceMax takes a number
       placeRing(); for (const c of small) for (const n of c) { n.x = n.tx + (Math.random() - 0.5) * 20; n.y = n.ty + (Math.random() - 0.5) * 20; }
       const setForces = () => sim
-        .force("x", d3.forceX(n => n.small ? n.tx : r.width / 2).strength(n => n.small ? 0.35 : 0.03 / spread))
-        .force("y", d3.forceY(n => n.small ? n.ty : r.height / 2).strength(n => n.small ? 0.35 : 0.035 / spread))
-        .force("charge", d3.forceManyBody().strength(n => n.small ? -15 : -(60 + 4 * n.r) * spread).distanceMax(700 * spread).theta(0.9));
+        .force("x", d3.forceX(n => n.small ? n.tx : r.width / 2).strength(n => n.small ? 0.25 : 0.015 / spread))
+        .force("y", d3.forceY(n => n.small ? n.ty : r.height / 2).strength(n => n.small ? 0.25 : 0.018 / spread))
+        .force("charge", d3.forceManyBody().strength(n => n.small ? -40 : -(110 + 6 * n.r) * spread).distanceMax(900 * spread).theta(0.9));
       setForces();
       sim.alpha(0.5); for (let i = 0; i < 60; i++) sim.tick();
       // the giant settles during these ticks, so re-place the ring on its final extent before the last ticks
