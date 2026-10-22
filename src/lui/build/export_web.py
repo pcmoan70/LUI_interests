@@ -33,8 +33,19 @@ def run(refresh=False, max_age=None, limit=None) -> None:
         topic_counts[t]["n_pubs"] = n
     for t, n in con.execute("SELECT topic_id, COUNT(*) FROM person_topic WHERE score>=0.05 GROUP BY 1"):
         topic_counts[t]["n_persons"] = n
+    cite_scope = defaultdict(lambda: defaultdict(int))
+    if con.execute("SELECT 1 FROM sqlite_master WHERE name='citing_work'").fetchone():
+        for pub_id, sc, n in con.execute("SELECT cited_pub_id, scope, COUNT(*) FROM citing_work GROUP BY 1,2"):
+            cite_scope[pub_id][sc] = n
+    cited_of = dict(con.execute("SELECT pub_id, COALESCE(cited_by_count,0) FROM publication"))
     for t in topics:
         t.update(topic_counts[t["topic_id"]])
+        tot = defaultdict(int)
+        for (pub_id,) in con.execute("SELECT pub_id FROM pub_topic WHERE topic_id=?", (t["topic_id"],)):
+            tot["total"] += cited_of.get(pub_id, 0)
+            for sc, n in cite_scope.get(pub_id, {}).items():
+                tot[sc] += n
+        t["cites"] = dict(tot)
 
     # ---- persons
     person_topics = defaultdict(list)
@@ -72,7 +83,9 @@ def run(refresh=False, max_age=None, limit=None) -> None:
             collab[r["person_id"]] = {"n": [r["n_pubs"], r["n_solo"], r["n_lui"], r["n_oslomet"], r["n_norway"], r["n_international"], r["n_unknown"]],
                                       "r": [r["r_pubs"], r["r_solo"], r["r_lui"], r["r_oslomet"], r["r_norway"], r["r_international"]],
                                       "countries": json.loads(r["countries_json"] or "[]"), "insts": json.loads(r["institutions_json"] or "[]"),
-                                      "partners": [r["partners_lui"], r["partners_ext"]], "cites": [r["cites_total"], r["cites_internal"], r["cites_external"]]}
+                                      "partners": [r["partners_lui"], r["partners_ext"]], "cites": [r["cites_total"], r["cites_internal"], r["cites_external"]],
+                                      "cs": [r["c_group"] or 0, r["c_lui"] or 0, r["c_oslomet"] or 0, r["c_norway"] or 0, r["c_international"] or 0, r["c_unknown"] or 0],
+                                      "cCountries": json.loads(r["c_countries_json"] or "[]")}
     persons = []
     for r in con.execute("SELECT * FROM person"):
         pid = r["person_id"]
@@ -173,7 +186,11 @@ def run(refresh=False, max_age=None, limit=None) -> None:
               [a["p"] for a in p["authors"] if a["p"]], len(p["authors"]), [t["t"] for t in p["topics"]], p["theories"], p["methods"], p["sf"], p["abs"]]
              for p in pubs]
     print("exporting web data:")
-    dump("meta.json", {"generated": date.today().isoformat(), "nPersons": len(persons), "nPubs": len(pubs), "nEdges": len(edges),
+    cov = {"fetched": 0, "total": 0}
+    if con.execute("SELECT 1 FROM sqlite_master WHERE name='citing_work'").fetchone():
+        cov["fetched"] = con.execute("SELECT COUNT(DISTINCT cited_pub_id) FROM citing_work").fetchone()[0]
+        cov["total"] = con.execute("SELECT COUNT(*) FROM publication WHERE openalex_work_id IS NOT NULL AND COALESCE(cited_by_count,0) > 0").fetchone()[0]
+    dump("meta.json", {"generated": date.today().isoformat(), "nPersons": len(persons), "nPubs": len(pubs), "nEdges": len(edges), "citeCoverage": cov,
                        "units": [dict(u) for u in units.values()], "faculty": "Fakultet for lærerutdanning og internasjonale studier (LUI), OsloMet"})
     dump("taxonomy.json", {"macro": macro, "topics": topics, "theories": theories, "methods": methods})
     dump("persons.json", persons)
@@ -184,5 +201,17 @@ def run(refresh=False, max_age=None, limit=None) -> None:
     dump("groups.json", groups)
     dump("projects.json", projects)
     dump("citations.json", citations)
+    # partner institutions: unique external coauthors per institution (faculty-wide, joint works only)
+    inst_names = {r[0]: (r[1], r[2]) for r in con.execute("SELECT inst_id, name, country FROM institution")} if con.execute("SELECT 1 FROM sqlite_master WHERE name='institution'").fetchone() else {}
+    lui_ids = {r[0] for r in con.execute("SELECT person_id FROM person WHERE is_listed=1 OR resolved_by='cristin_only'")}
+    joint = {r[0] for r in con.execute("SELECT DISTINCT pub_id FROM publication_author WHERE person_id IN (%s)" % ",".join("?" * len(lui_ids)), list(lui_ids))}
+    inst_auth = defaultdict(set); inst_links = defaultdict(int)
+    for pub_id, pid, name, unit in con.execute("SELECT pub_id, person_id, name_raw, affiliation_unit_id FROM publication_author WHERE affiliation_unit_id IS NOT NULL"):
+        if pub_id not in joint or (pid in lui_ids) or unit.startswith("215.4") or unit.startswith("0."):
+            continue
+        iid = unit.split(".")[0]
+        inst_auth[iid].add(pid or (name or "").strip().lower()); inst_links[iid] += 1
+    institutions = [[inst_names.get(i, (i, None))[0] or i, inst_names.get(i, (None, None))[1], i, len(a), inst_links[i]] for i, a in inst_auth.items()]
+    dump("institutions.json", institutions)
     orders_p = DERIVED_DIR / "orders.json"
     dump("orders.json", json.loads(orders_p.read_text(encoding="utf-8")) if orders_p.exists() else {})

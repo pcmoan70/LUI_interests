@@ -114,3 +114,6 @@ table.tbl th.sort-desc::after { content: " ▼"; font-size: 0.7em; }
 .cbar { display: flex; height: 10px; border-radius: 5px; overflow: hidden; background: var(--chip); margin: 0.3rem 0; }
 .cbar span { display: block; height: 100%; }
 i.sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 0.4rem; vertical-align: -1px; }
+
+.scrolltbl { max-height: 420px; overflow: auto; border: 1px solid var(--line); border-radius: 6px; }
+.scrolltbl table.tbl th { position: sticky; top: 0; background: var(--card); }

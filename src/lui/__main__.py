@@ -11,6 +11,7 @@ STAGES = {
     "scrape-nva": "lui.scrape.nva:run",
     "scrape-openalex": "lui.scrape.openalex:run",
     "scrape-pdf": "lui.scrape.pdf:run",
+    "scrape-openalex-cites": "lui.scrape.openalex_cites:run",
     "identity": "lui.identity:run",
     "embed": "lui.classify.embed:run",
     "cluster": "lui.classify.cluster:run",

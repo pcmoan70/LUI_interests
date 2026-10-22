@@ -20,7 +20,13 @@ def ensure_table(con) -> None:
         n_pubs INTEGER, n_solo INTEGER, n_lui INTEGER, n_oslomet INTEGER, n_norway INTEGER, n_international INTEGER, n_unknown INTEGER,
         r_pubs INTEGER, r_solo INTEGER, r_lui INTEGER, r_oslomet INTEGER, r_norway INTEGER, r_international INTEGER,
         n_countries INTEGER, countries_json TEXT, institutions_json TEXT, partners_lui INTEGER, partners_ext INTEGER,
-        cites_total INTEGER, cites_internal INTEGER, cites_external INTEGER)""")
+        cites_total INTEGER, cites_internal INTEGER, cites_external INTEGER,
+        c_group INTEGER, c_lui INTEGER, c_oslomet INTEGER, c_norway INTEGER, c_international INTEGER, c_unknown INTEGER, c_countries_json TEXT)""")
+    for col in ("c_group", "c_lui", "c_oslomet", "c_norway", "c_international", "c_unknown"):
+        if col not in {r[1] for r in con.execute("PRAGMA table_info(person_collab)")}:
+            con.execute(f"ALTER TABLE person_collab ADD COLUMN {col} INTEGER")
+    if "c_countries_json" not in {r[1] for r in con.execute("PRAGMA table_info(person_collab)")}:
+        con.execute("ALTER TABLE person_collab ADD COLUMN c_countries_json TEXT")
     con.execute("""CREATE TABLE IF NOT EXISTS institution (inst_id TEXT PRIMARY KEY, name TEXT, country TEXT)""")
 
 
@@ -65,6 +71,17 @@ def run(refresh=False, max_age=365, limit=None) -> None:
     internal_cites = Counter()
     for (cited,) in con.execute("SELECT cited_pub_id FROM citation"):
         internal_cites[cited] += 1
+    # citing works classified by scope (from scrape-openalex-cites), per cited publication
+    citing: dict[str, list[tuple]] = defaultdict(list)
+    if con.execute("SELECT 1 FROM sqlite_master WHERE name='citing_work'").fetchone():
+        for cited, cpid, sc, cj in con.execute("SELECT cited_pub_id, citing_pub_id, scope, countries_json FROM citing_work"):
+            citing[cited].append((cpid, sc, json.loads(cj or "[]")))
+    groups_of: dict[str, set] = defaultdict(set)
+    for gid, pid in con.execute("SELECT group_id, person_id FROM group_member WHERE person_id IS NOT NULL"):
+        groups_of[pid].add(gid)
+    authors_of_pub: dict[str, set] = defaultdict(set)
+    for pub_id, pid in con.execute("SELECT pub_id, person_id FROM publication_author WHERE person_id IS NOT NULL"):
+        authors_of_pub[pub_id].add(pid)
 
     year_now = date.today().year
     rows = []
@@ -74,7 +91,17 @@ def run(refresh=False, max_age=365, limit=None) -> None:
             continue
         c = Counter(); r = Counter(); countries = Counter(); insts = Counter(); partners_lui = set(); partners_ext = set()
         cites_total = cites_int = 0
+        cs = Counter(); c_countries = Counter()
         for p in pubs:
+            for cpid, sc, cc in citing.get(p, []):
+                if sc == "lui" and cpid:   # research-group level: a citing LUI author shares a research group with this person
+                    citing_authors = {a for a in authors_of_pub.get(cpid, set()) if a != pid}
+                    if any(groups_of[pid] & groups_of[a] for a in citing_authors):
+                        cs["group"] += 1
+                cs[sc] += 1
+                for code in cc:
+                    if code != "NO":
+                        c_countries[code] += 1
             year, cited = pubmeta[p]
             recent = year and year >= year_now - RECENT_YEARS
             others = [(a, u) for a, u in authors[p] if a != pid]
@@ -87,7 +114,7 @@ def run(refresh=False, max_age=365, limit=None) -> None:
                 if a:
                     (partners_lui if sc == "lui" else partners_ext).add(a)
                 if sc in ("norway", "international", "oslomet") and u:
-                    iid = u.split(".")[0]; insts[known.get(iid, (iid, None))[0] or iid] += 1
+                    iid = u.split(".")[0]; nm, cc = known.get(iid, (iid, None)); insts[(nm or iid, cc or "?", iid)] += 1
                 if sc == "international" and u:
                     countries[known.get(u.split(".")[0], (None, None))[1]] += 1
             for sc in scopes:
@@ -96,11 +123,12 @@ def run(refresh=False, max_age=365, limit=None) -> None:
             cites_int += internal_cites.get(p, 0)
         rows.append((pid, c["pubs"], c["solo"], c["lui"], c["oslomet"], c["norway"], c["international"], c["unknown"],
                      r["pubs"], r["solo"], r["lui"], r["oslomet"], r["norway"], r["international"],
-                     len(countries), json.dumps(countries.most_common(10)), json.dumps(insts.most_common(10), ensure_ascii=False),
-                     len(partners_lui), len(partners_ext), cites_total, cites_int, max(0, cites_total - cites_int)))
+                     len(countries), json.dumps(countries.most_common(10)), json.dumps([[nm, n, cc, iid] for (nm, cc, iid), n in insts.most_common()], ensure_ascii=False),
+                     len(partners_lui), len(partners_ext), cites_total, cites_int, max(0, cites_total - cites_int),
+                     cs["group"], cs["lui"], cs["oslomet"], cs["norway"], cs["international"], cs["unknown"], json.dumps(c_countries.most_common(10))))
     with run_log(con, "build-collab") as log:
         con.execute("DELETE FROM person_collab")
-        con.executemany("INSERT INTO person_collab VALUES (" + ",".join("?" * 22) + ")", rows)
+        con.executemany("INSERT INTO person_collab VALUES (" + ",".join("?" * 29) + ")", rows)
         con.commit()
         log["rows"] = len(rows)
         log["notes"] = f"{len(rows)} persons; {len(known)} institutions"

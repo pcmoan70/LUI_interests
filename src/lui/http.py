@@ -20,7 +20,7 @@ _MIN_INTERVAL = {
     "www.oslomet.no": 1.0,
     "api.cristin.no": 0.2,
     "api.nva.unit.no": 0.2,
-    "api.openalex.org": 0.15,
+    "api.openalex.org": 0.25,
 }
 _last_call: dict[str, float] = {}
 
@@ -73,17 +73,21 @@ class Fetcher:
                 return body_p.read_bytes()
 
         host = urlparse(url).netloc
-        for attempt in range(5):
+        for attempt in range(9):
             _throttle(host)
             try:
                 r = self.client.get(url, headers=headers)
             except httpx.HTTPError as e:
-                if attempt == 4:
+                if attempt == 8:
                     raise
                 time.sleep(2 ** attempt)
                 continue
-            if r.status_code in (429, 500, 502, 503, 504) and attempt < 4:
-                time.sleep(2 ** attempt * 2)
+            if r.status_code == 429 and attempt < 8:          # rate limited: honour Retry-After, otherwise back off hard
+                ra = r.headers.get("retry-after")
+                time.sleep(float(ra) if ra and ra.replace(".", "", 1).isdigit() else min(120, 15 * (attempt + 1)))
+                continue
+            if r.status_code in (500, 502, 503, 504) and attempt < 8:
+                time.sleep(min(60, 2 ** attempt * 2))
                 continue
             break
         self.n_network += 1

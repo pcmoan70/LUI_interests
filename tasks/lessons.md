@@ -16,3 +16,4 @@
 - 2026-10-21 Bash heredocs in this environment mangle backslashes; write patch scripts with the Write tool
   and run them with python -I instead of inline heredocs when regexes are involved.
 - 2026-10-21 Attribution: embedding similarity alone missed explicitly stated interests (bio said 'kritisk tenkning', talks were title-only). Always keep a lexical channel (keywords in titles/bios) next to embeddings, include talk titles, and audit stated-vs-profiled interests.
+- 2026-10-22 OpenAlex now enforces a daily free credit limit (x-ratelimit-limit: 1000 requests/day, 429 with retry-after ~15 h when exhausted). Large citation crawls must be spread over days or use a paid API key; the fetcher honours Retry-After.
