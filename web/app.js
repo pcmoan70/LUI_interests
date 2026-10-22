@@ -633,7 +633,8 @@ function viewGraph() {
   app.innerHTML = `<h1>Samarbeidsgraf</h1><div class="toolbar" id="bar"></div>
     <div class="legend" id="legend"></div>
     <div class="graph-wrap"><div id="cy" style="position:relative"><canvas id="gc" style="width:100%;height:100%;display:block;cursor:grab"></canvas>
-      <div class="small muted no-print" style="position:absolute;left:8px;bottom:6px">scroll = zoom · dra bakgrunn = panorer · dra node = flytt · klikk node = sentrer med kontakter i ringer · dobbeltklikk bakgrunn = tilbake</div></div>
+      <div class="small muted no-print" style="position:absolute;left:8px;bottom:6px">scroll = zoom · dra bakgrunn = panorer · dra node = flytt · klikk node = sentrer med kontakter i ringer · dobbeltklikk bakgrunn = tilbake</div>
+      <div class="no-print" style="position:absolute;right:8px;top:8px;display:flex;gap:.4rem"><button type="button" id="gFit" title="Zoom ut så hele grafen vises">Vis alt</button><button type="button" id="gReset" title="Legg ut grafen på nytt: komponentene spres utover igjen">Nullstill layout</button></div></div>
       <div class="panel" id="side"><p class="muted">Klikk på en node eller kant for detaljer.</p></div></div>
     <datalist id="pnames">${D.persons.map(p => `<option value="${esc(p.name)}">`).join("")}</datalist>`;
   const st = getQS();
@@ -733,6 +734,8 @@ function viewGraph() {
   }
   addEventListener("resize", () => { if (document.body.contains(canvas)) { size(); draw(); } });
 
+  $("#gFit").addEventListener("click", () => { egoFit = null; fitFn(true); });
+  $("#gReset").addEventListener("click", () => { for (const n of nodes) { n.fx = null; n.fy = null; } egoFit = null; selected = null; nodes = []; apply(); });
   filterBar($("#bar"), [
     { id: "et", type: "multi", label: "kanttyper", options: Object.entries(EDGE_LABEL), value: "coauthor,cites" },
     { id: "unit", type: "select", label: "institutt", options: unitOptions() },
