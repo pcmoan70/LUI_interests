@@ -115,5 +115,9 @@ table.tbl th.sort-desc::after { content: " ▼"; font-size: 0.7em; }
 .cbar span { display: block; height: 100%; }
 i.sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 0.4rem; vertical-align: -1px; }
 
-.scrolltbl { max-height: 420px; overflow: auto; border: 1px solid var(--line); border-radius: 6px; }
+.scrolltbl { max-height: 420px; overflow-y: auto; overflow-x: clip; border: 1px solid var(--line); border-radius: 6px; }
+.scrolltbl table.tbl { width: 100%; max-width: 100%; table-layout: fixed; display: table; white-space: normal; box-sizing: border-box; }
+.scrolltbl table.tbl th, .scrolltbl table.tbl td { white-space: normal; overflow-wrap: anywhere; padding: 0.25rem 0.35rem; }
+.scrolltbl table.tbl th.num, .scrolltbl table.tbl td.num { width: 3.6em; }
+.scrolltbl table.tbl th:first-child { width: auto; }
 .scrolltbl table.tbl th { position: sticky; top: 0; background: var(--card); }
