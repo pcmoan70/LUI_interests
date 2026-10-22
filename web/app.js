@@ -213,7 +213,7 @@ function downloadCSV(name, rows) {
 /* ---------------- router ---------------- */
 const routes = {
   "": viewExplore, matrix: viewMatrix, graph: viewGraph, topics: viewTopics, topic: viewTopic, person: viewPerson,
-  pair: viewPair, score: viewScore, about: viewAbout, group: viewGroup, project: viewProject, pubs: viewPubs, relmatrix: viewRelMatrix,
+  pair: viewPair, score: viewScore, about: viewAbout, group: viewGroup, project: viewProject, pubs: viewPubs, relmatrix: viewRelMatrix, collab: viewCollab,
 };
 function route() {
   if (suppressRoute) return;
@@ -373,6 +373,7 @@ async function viewPerson(id) {
         <div id="pubs"></div>
       </div>
       <div>
+        ${collabSection(p)}
         <h2>Samarbeid</h2>
         ${coll.length ? `<table class="tbl"><tr><th>Person</th><th>Relasjon</th></tr>${coll.slice(0, 40).map(c => `<tr><td>${personLink(c.p)} <a class="small" href="#/pair/${esc(id)}/${esc(c.p.id)}">par</a></td><td class="small">${Object.values(c.es).map(e => `<span style="color:${EDGE_COLOR[e.type]}" title="${e.type === "coauthor" ? "Antall felles arbeider (inntil 30 forfattere) og årsspenn" : e.type === "cites" ? "Antall siteringer mellom de to personenes arbeider (OpenAlex)" : e.type === "topic_similarity" ? HELP.similarity : ""}">${EDGE_LABEL[e.type]}${e.type === "coauthor" || e.type === "cites" ? ` (${e.n}${e.y0 ? `, ${e.y0}–${e.y1}` : ""})` : ""}</span>`).join(", ")}</td></tr>`).join("")}</table>` : '<p class="muted">Ingen registrerte relasjoner.</p>'}
         <h2>Mulige nye samarbeidspartnere</h2>
@@ -1210,6 +1211,73 @@ function viewRelMatrix() {
     for (const c of lastCells) M[c.i][c.j] += c.e.w;
     downloadCSV("lui-relasjonsmatrise.csv", [["", ...lastOrder.map(id => idx.person.get(id)?.name)], ...lastOrder.map((id, i) => [idx.person.get(id)?.name, ...M[i].map(v => v ? v.toFixed(2) : "")])]);
   });
+}
+
+/* ---------------- collaboration profiles (internal vs external) ---------------- */
+const SCOPE_LABELS = [["lui", "LUI", 2], ["oslomet", "annen OsloMet-enhet", 3], ["norway", "annen norsk institusjon", 4], ["international", "internasjonal", 5]];
+const SCOPE_COLORS = { lui: "#0d5c8a", oslomet: "#2ca02c", norway: "#9467bd", international: "#c75b12" };
+const HELP_COLLAB = {
+  scope: "Andel av personens arbeider (alle kategorier, inntil 30 forfattere) som har minst én medforfatter i gruppen. Tilhørighet hentes fra Cristin-registreringen av hvert arbeid (institusjon og land). Et arbeid kan telle i flere grupper. Alene = ingen andre forfattere.",
+  cites: "Siteringer fra OpenAlex (via DOI): interne = fra arbeider med LUI-forfatter (kjent fra våre data), eksterne = resten av OpenAlex-tallet. Norske arbeider uten DOI mangler siteringstall.",
+  recent: "Samme tall for arbeider publisert de siste fem årene.",
+};
+function collabBar(c, recent = false) {
+  const v = recent ? c.r : c.n, total = v[0] || 1;
+  return `<div class="cbar" title="${esc(HELP_COLLAB.scope)}${recent ? " " + esc(HELP_COLLAB.recent) : ""}">` + SCOPE_LABELS.map(([k, lab, i]) =>
+    `<span style="width:${(100 * v[i] / total).toFixed(1)}%;background:${SCOPE_COLORS[k]}" title="${esc(lab)}: ${v[i]} av ${v[0]} arbeider (${Math.round(100 * v[i] / total)} %)"></span>`).join("") + `</div>`;
+}
+function collabSection(p) {
+  const c = p.collab; if (!c) return "";
+  const pct = (a, b) => b ? `${Math.round(100 * a / b)} %` : "–";
+  return `<h2 title="${esc(HELP_COLLAB.scope)}">Samarbeidsprofil</h2>
+    <table class="tbl"><tr><th>Medforfattere fra</th><th class="num" title="${esc(HELP_COLLAB.scope)}">Alle år</th><th class="num" title="${esc(HELP_COLLAB.recent)}">Siste 5 år</th></tr>
+    ${SCOPE_LABELS.map(([k, lab, i]) => `<tr><td><i class="sw" style="background:${SCOPE_COLORS[k]}"></i>${esc(lab)}</td><td class="num">${c.n[i]} (${pct(c.n[i], c.n[0])})</td><td class="num">${c.r[i]} (${pct(c.r[i], c.r[0])})</td></tr>`).join("")}
+    <tr><td>Alene</td><td class="num">${c.n[1]} (${pct(c.n[1], c.n[0])})</td><td class="num">${c.r[1]} (${pct(c.r[1], c.r[0])})</td></tr>
+    <tr><td class="muted">Arbeider i alt</td><td class="num">${c.n[0]}</td><td class="num">${c.r[0]}</td></tr></table>
+    ${collabBar(c)}
+    <p class="small muted">Ulike medforfattere: ${c.partners[0]} ved LUI, ${c.partners[1]} utenfor${c.countries.length ? ` · land: ${c.countries.map(([k, n]) => `${esc(k)} (${n})`).join(", ")}` : ""}</p>
+    ${c.insts.length ? `<p class="small">Partnerinstitusjoner: ${c.insts.map(([k, n]) => `${esc(k)} (${n})`).join(" · ")}</p>` : ""}
+    <p class="small" title="${esc(HELP_COLLAB.cites)}">Siteringer (OpenAlex): ${c.cites[0]} totalt, ${c.cites[1]} interne (fra LUI), ${c.cites[2]} eksterne ⓘ</p>`;
+}
+function viewCollab() {
+  const app = $("#app");
+  app.innerHTML = `<h1>Internt og eksternt samarbeid</h1>
+    <p class="muted">Hvor stor del av arbeidene har medforfattere fra LUI, andre OsloMet-enheter, andre norske institusjoner og utlandet – per institutt og per person. Hold musepekeren over tallene for definisjoner.</p>
+    <div class="toolbar" id="bar"></div>
+    <div class="legend">${SCOPE_LABELS.map(([k, lab]) => `<span><i style="background:${SCOPE_COLORS[k]}"></i>${esc(lab)}</span>`).join("")}</div>
+    <h2>Per institutt</h2><div id="units"></div>
+    <h2>Partnerland og -institusjoner</h2><div id="partners" class="cols"></div>
+    <h2>Per person</h2><div class="toolbar no-print"><button type="button" id="csv">Last ned (CSV)</button></div><div id="people"></div>`;
+  let current = [];
+  filterBar($("#bar"), [
+    { id: "unit", type: "select", label: "institutt", options: unitOptions() },
+    { id: "type", type: "select", label: "stilling", options: [["academic", "vitenskapelig"], ["admin", "administrativ"]] },
+    { id: "macro", type: "select", label: "makrotema", options: macroOptions() },
+    { id: "topic", type: "select", label: "tema", options: topicOptions() },
+    { id: "recent", type: "check", label: "bare siste 5 år" },
+    { id: "minCore", type: "number", label: "min. vitensk. publ." },
+    SCOPE_FIELD(),
+  ], f => {
+    const people = D.persons.filter(p => p.collab && personMatches(p, f));
+    const key = f.recent ? "r" : "n";
+    const pct = (a, b) => b ? Math.round(100 * a / b) : 0;
+    // per unit aggregation (sum of works per scope)
+    const byUnit = new Map();
+    for (const p of people) { const u = unitLabel(p); if (!byUnit.has(u)) byUnit.set(u, { n: 0, v: [0, 0, 0, 0, 0, 0], cites: [0, 0, 0], countries: new Map() }); const g = byUnit.get(u); g.n++; p.collab[key].forEach((x, i) => g.v[i] += x); p.collab.cites.forEach((x, i) => g.cites[i] += x); for (const [c, n] of p.collab.countries) g.countries.set(c, (g.countries.get(c) || 0) + n); }
+    $("#units").innerHTML = `<table class="tbl"><tr><th>Institutt</th><th class="num">Personer</th><th class="num">Arbeider</th>${SCOPE_LABELS.map(([k, lab]) => `<th class="num" title="${esc(HELP_COLLAB.scope)}">${esc(lab)} %</th>`).join("")}<th class="num">Alene %</th><th class="num" title="${esc(HELP_COLLAB.cites)}">Eksterne sit. %</th><th>Fordeling</th></tr>
+      ${[...byUnit.entries()].sort((a, b) => b[1].v[0] - a[1].v[0]).map(([u, g]) => `<tr><td>${esc(u)}</td><td class="num">${g.n}</td><td class="num">${g.v[0]}</td>${SCOPE_LABELS.map(([, , i]) => `<td class="num">${pct(g.v[i], g.v[0])}</td>`).join("")}<td class="num">${pct(g.v[1], g.v[0])}</td><td class="num">${g.cites[0] ? pct(g.cites[2], g.cites[0]) : "–"}</td><td style="min-width:160px">${collabBar({ n: g.v, r: g.v }, false)}</td></tr>`).join("")}</table>`;
+    const countries = new Map(), insts = new Map();
+    for (const p of people) { for (const [c, n] of p.collab.countries) countries.set(c, (countries.get(c) || 0) + n); for (const [k, n] of p.collab.insts) insts.set(k, (insts.get(k) || 0) + n); }
+    const top = m => [...m.entries()].sort((a, b) => b[1] - a[1]).slice(0, 25);
+    $("#partners").innerHTML = `<div><h3>Land (medforfatterskap, internasjonalt)</h3><table class="tbl"><tr><th>Land</th><th class="num">Forfatterkoblinger</th></tr>${top(countries).map(([c, n]) => `<tr><td>${esc(c)}</td><td class="num">${n}</td></tr>`).join("")}</table></div>
+      <div><h3>Institusjoner utenfor LUI</h3><table class="tbl"><tr><th>Institusjon</th><th class="num">Forfatterkoblinger</th></tr>${top(insts).map(([c, n]) => `<tr><td>${esc(c)}</td><td class="num">${n}</td></tr>`).join("")}</table></div>`;
+    current = people.slice().sort((a, b) => b.collab[key][0] - a.collab[key][0]);
+    $("#people").innerHTML = `<table class="tbl"><tr><th>Person</th><th>Institutt</th><th class="num">Arbeider</th>${SCOPE_LABELS.map(([k, lab]) => `<th class="num" title="${esc(HELP_COLLAB.scope)}">${esc(lab)} %</th>`).join("")}<th class="num">Land</th><th class="num" title="${esc(HELP_COLLAB.cites)}">Sit. eksterne/interne</th><th>Fordeling</th></tr>
+      ${current.slice(0, 400).map(p => { const v = p.collab[key]; return `<tr><td>${personLink(p)}</td><td>${esc(unitLabel(p))}</td><td class="num">${v[0]}</td>${SCOPE_LABELS.map(([, , i]) => `<td class="num">${pct(v[i], v[0])}</td>`).join("")}<td class="num">${p.collab.countries.length}</td><td class="num">${p.collab.cites[2]}/${p.collab.cites[1]}</td><td style="min-width:140px">${collabBar(p.collab, !!f.recent)}</td></tr>`; }).join("")}</table>`;
+    $("#f_count").textContent = `${people.length} personer`;
+  });
+  $("#csv").addEventListener("click", () => downloadCSV("lui-samarbeid.csv", [["navn", "institutt", "arbeider", "alene", "lui", "oslomet", "norge", "internasjonalt", "land", "siteringer_total", "siteringer_interne", "siteringer_eksterne"],
+    ...current.map(p => [p.name, unitLabel(p), p.collab.n[0], p.collab.n[1], p.collab.n[2], p.collab.n[3], p.collab.n[4], p.collab.n[5], p.collab.countries.length, ...p.collab.cites])]));
 }
 
 /* ---------------- about ---------------- */

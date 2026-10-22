@@ -18,6 +18,7 @@ STAGES = {
     "externals": "lui.build.externals:run",
     "build-edges": "lui.build.edges:run",
     "build-matrices": "lui.build.matrices:run",
+    "build-collab": "lui.build.collab:run",
     "export-web": "lui.build.export_web:run",
     "export-graph": "lui.build.export_graph:run",
     "verify": "lui.verify:run",

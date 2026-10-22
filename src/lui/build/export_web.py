@@ -66,6 +66,13 @@ def run(refresh=False, max_age=None, limit=None) -> None:
         yrs_all[pid_].add(y)
         if core:
             yrs_core[pid_].add(y)
+    collab = {}
+    if con.execute("SELECT 1 FROM sqlite_master WHERE name='person_collab'").fetchone():
+        for r in con.execute("SELECT * FROM person_collab"):
+            collab[r["person_id"]] = {"n": [r["n_pubs"], r["n_solo"], r["n_lui"], r["n_oslomet"], r["n_norway"], r["n_international"], r["n_unknown"]],
+                                      "r": [r["r_pubs"], r["r_solo"], r["r_lui"], r["r_oslomet"], r["r_norway"], r["r_international"]],
+                                      "countries": json.loads(r["countries_json"] or "[]"), "insts": json.loads(r["institutions_json"] or "[]"),
+                                      "partners": [r["partners_lui"], r["partners_ext"]], "cites": [r["cites_total"], r["cites_internal"], r["cites_external"]]}
     persons = []
     for r in con.execute("SELECT * FROM person"):
         pid = r["person_id"]
@@ -89,6 +96,7 @@ def run(refresh=False, max_age=None, limit=None) -> None:
             "thin": int(n_core.get(pid, 0) < 2 and not bio),
             "aff": r["affiliation"], "country": r["country"], "nJoint": r["n_joint"],
             "yrs": sorted(yrs_core[pid]), "yrsAll": sorted(yrs_all[pid]),
+            "collab": collab.get(pid),
         })
 
     # ---- publications (metadata only; those with at least one known person)

@@ -88,6 +88,7 @@ Plan: see ../PLAN.md. Tick items as they are completed; add a Review section per
 - [x] Finn samarbeid: topic chips toggle on/off in the comparison (strike-through = off), persisted in the URL (user request 2026-10-21)
 - [x] Topic page → interest matrix shows the persons with the topic (≥0.10, max 80) and all their other topics (user request 2026-10-21)
 - [x] Second-degree relation 'Via felles kontakt' (two LUI persons sharing a coauthor/citation contact without being coauthors; weight = number of shared contacts, intermediaries as evidence; dashed in graph) (user request 2026-10-21)
+- [x] Collaboration profiles (`lui build-collab`): coauthor scope LUI / other OsloMet / other Norwegian / international from Cristin affiliations (909 institutions resolved), partner institutions and countries, internal vs external citations; person-page section and `#/collab` overview per department with CSV (user request 2026-10-22)
 - [ ] Playwright batch PDF export
 - [ ] nb/en toggle, accessibility pass
 
