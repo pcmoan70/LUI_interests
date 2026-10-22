@@ -268,7 +268,7 @@ function personCard(p, f = {}) {
   return `<div class="card">
     <div class="name">${personLink(p)}</div>
     <div class="sub">${p.listed ? `${esc(p.title || "")} · ${esc(unitLabel(p))}` : `${esc(EXT_LABEL[p.type] || "ikke i ansattoversikten")}${p.aff ? ` · ${esc(p.aff)}${p.country && p.country !== "NO" ? ` (${esc(p.country)})` : ""}` : ""}`}</div>
-    <div class="sub"><span title="${esc(p.listed || !p.nJoint ? HELP.core : HELP.joint)}">${p.listed || !p.nJoint ? `${p.nCore} vitensk. publ.` : `${p.nJoint} felles publ. med LUI`}</span>${p.collab && p.collab.cites[0] ? ` · <span title="${esc(HELP_CITES)}">${p.collab.cites[0]} sit.${p.collab.cs[4] ? ` (${p.collab.cs[4]} int.)` : ""}</span>` : ""}${p.years ? ` <span title="Første og siste registrerte publiseringsår">(${p.years[0]}–${p.years[1]})</span>` : ""}${p.thin && p.listed ? ' · <span title="lite tekstgrunnlag">tynn profil</span>' : ""}</div>
+    <div class="sub"><span title="${esc(p.listed || !p.nJoint ? HELP.core : HELP.joint)}">${p.listed || !p.nJoint ? `${p.nCore} vitensk. publ.` : `${p.nJoint} felles publ. med LUI`}</span>${p.collab && p.collab.cites[0] ? ` · <span class="oa" title="${esc(HELP_CITES)} ${esc(OA_SHORT)}">${p.collab.cites[0]} sit.${p.collab.cs[4] ? ` (${p.collab.cs[4]} int.)` : ""} ⚠</span>` : ""}${p.years ? ` <span title="Første og siste registrerte publiseringsår">(${p.years[0]}–${p.years[1]})</span>` : ""}${p.thin && p.listed ? ' · <span title="lite tekstgrunnlag">tynn profil</span>' : ""}</div>
     <div class="chips">${tops.map(t => topicChip(t)).join("")}${tops.length ? "" : (p.keywords || []).slice(0, 4).map(k => `<span class="chip k">${esc(k)}</span>`).join("")}</div>
   </div>`;
 }
@@ -330,7 +330,7 @@ function pubItem(pub, hl) {
   const links = [pub.doi ? `<a href="https://doi.org/${esc(pub.doi)}" target="_blank" rel="noopener">DOI</a>` : "",
     pub.nva ? `<a href="https://nva.sikt.no/registration/${esc(pub.nva)}" target="_blank" rel="noopener">NVA</a>` : ""].filter(Boolean).join(" ");
   const more = pub.doi ? `<a href="#" class="small no-print" data-oa="${esc(pub.id)}">mer</a>` : "";
-  return `<div class="pub" data-pub="${esc(pub.id)}"><span class="t">${esc(pub.title)}</span><span class="badge">${esc(GROUP_LABEL[pub.group] || pub.group)}</span>${pub.cited ? `<span class="badge">${pub.cited} sit.</span>` : ""}${pub.sf ? `<span class="badge" title="OpenAlex subfield">${esc(pub.sf)}</span>` : ""}
+  return `<div class="pub" data-pub="${esc(pub.id)}"><span class="t">${esc(pub.title)}</span><span class="badge">${esc(GROUP_LABEL[pub.group] || pub.group)}</span>${pub.cited ? `<span class="badge oa" title="${esc(OA_SHORT)}">${pub.cited} sit. ⚠</span>` : ""}${pub.sf ? `<span class="badge" title="OpenAlex subfield">${esc(pub.sf)}</span>` : ""}
     <div class="meta">${authors}${pub.nAuthors > pub.authors.length ? ` (+${pub.nAuthors - pub.authors.length} andre)` : ""} (${pub.year ?? "?"}). ${esc(pub.venue || "")} ${links} ${more} ${(pub.topics || []).map(t => topicChip(t)).join(" ")}<span class="small muted" data-oa-out></span></div></div>`;
 }
 function bars(items, labelFn, max = 1) {
@@ -443,7 +443,7 @@ function viewTopics() {
       return `<h2 style="border-color:${macroColor(idx.macro.get(m.macro_id))}">${esc(m.macro_id)} · ${esc(m.label_nb || m.label_en)} <span class="muted small">${esc(m.definition || "")}</span></h2>
       <div class="grid">${ts.map(t => { const n = f.unit ? ppl.filter(p => p.topics.some(x => x.t === t.topic_id && x.s >= 0.05)).length : t.n_persons;
         return `<div class="card"><div class="name"><span class="muted small">${esc(t.topic_id)}</span> <a href="#/topic/${esc(t.topic_id)}">${esc(t.label_nb || t.label_en)}</a></div>
-        <div class="sub">${esc(t.label_en || "")}</div><div class="small">${esc(t.definition_nb || t.definition_en || "")}</div><div class="sub"><span title="${esc(HELP.topicPersons)}">${n} personer</span> · <span title="Arbeider der temaet er blant de 1–4 tildelte temaene (vitenskapelige arbeider og foredrag med tittel).">${t.n_pubs} publ.</span>${t.cites ? ` · <span title="Sum OpenAlex-siteringer for temaets arbeider; internasjonale = siterende arbeid med institusjon utenfor Norge">${t.cites.total || 0} sit. (${t.cites.international || 0} int.)</span>` : ""}</div></div>`; }).join("")}</div>`; }).join("");
+        <div class="sub">${esc(t.label_en || "")}</div><div class="small">${esc(t.definition_nb || t.definition_en || "")}</div><div class="sub"><span title="${esc(HELP.topicPersons)}">${n} personer</span> · <span title="Arbeider der temaet er blant de 1–4 tildelte temaene (vitenskapelige arbeider og foredrag med tittel).">${t.n_pubs} publ.</span>${t.cites ? ` · <span class="oa" title="Sum OpenAlex-siteringer for temaets arbeider; internasjonale = siterende arbeid med institusjon utenfor Norge. ${esc(OA_SHORT)}">${t.cites.total || 0} sit. (${t.cites.international || 0} int.) ⚠</span>` : ""}</div></div>`; }).join("")}</div>`; }).join("");
     $("#f_count").textContent = "";
   });
 }
@@ -461,7 +461,7 @@ async function viewTopic(id) {
     <div class="muted">${esc(t.label_en || "")} · makrogruppe: ${esc(m?.macro_id || "")} ${esc(m?.label_nb || "")}</div>
     <p>${esc(t.definition_nb || t.definition_en || "")}</p>
     ${t.keywords?.length ? `<div class="chips">${t.keywords.map(k => `<span class="chip k">${esc(k)}</span>`).join("")}</div>` : ""}
-    ${t.cites ? `<p class="small" title="${esc(HELP_CITES)} Summert over arbeidene som har temaet.">Siteringer av temaets arbeider (OpenAlex): ${t.cites.total || 0} totalt · ${CITE_LEVELS.slice(1).map(([k, lab]) => `${esc(lab)} ${t.cites[k] || 0}`).join(" · ")} ⓘ</p>` : ""}
+    ${t.cites ? `<p class="small" title="${esc(HELP_CITES)} Summert over arbeidene som har temaet.">Siteringer av temaets arbeider (${oaMark("OpenAlex")}): ${t.cites.total || 0} totalt · ${CITE_LEVELS.slice(1).map(([k, lab]) => `${esc(lab)} ${t.cites[k] || 0}`).join(" · ")} ⓘ</p>${oaWarning()}` : ""}
     <div class="toolbar" id="bar"></div>
     <div class="cols"><div><h2 id="ph">Personer</h2><div id="people"></div><h2 id="pubh">Publikasjoner</h2><div id="pubs"></div></div>
     <div><h2>Utvikling</h2><div class="small" id="trend"></div><h2>Nærliggende tema</h2><div class="chips">${adjacent.map(([k]) => topicChip(k)).join("")}</div>
@@ -486,7 +486,7 @@ async function viewTopic(id) {
     const people = D.persons.map(p => ({ p, s: (p.topics || []).find(x => x.t === id)?.s ?? 0, n: (p.topics || []).find(x => x.t === id)?.n ?? 0 }))
       .filter(x => x.s >= (+f.tmin || 0.05) && scopeOk(x.p, f.scope) && (!f.unit || x.p.unit === f.unit) && (!f.type || x.p.type === f.type) && (!yearsSet || activeIn(x.p, ya, yb))).sort((a, b) => b.s - a.s);
     $("#ph").textContent = `Personer (${people.length})`; $("#ph").title = HELP.topicPersons; $("#pubh").textContent = `Publikasjoner (${pubs.length})`; $("#pubh").title = HELP.topicPubs;
-    $("#people").innerHTML = `<table class="tbl"><tr><th>Person</th><th>Institutt</th><th class="num" title="${esc(HELP.score)}">Styrke ⓘ</th><th class="num" title="${esc(HELP.topicN)}">Publ. ⓘ</th><th class="num" title="Sum OpenAlex-siteringer for alle personens arbeider (ikke bare dette temaet)">Sit. ⓘ</th><th class="num" title="${esc(HELP_CITES)}">Sit. internasj. ⓘ</th></tr>
+    $("#people").innerHTML = `<table class="tbl"><tr><th>Person</th><th>Institutt</th><th class="num" title="${esc(HELP.score)}">Styrke ⓘ</th><th class="num" title="${esc(HELP.topicN)}">Publ. ⓘ</th><th class="num" title="Sum OpenAlex-siteringer for alle personens arbeider (ikke bare dette temaet). ${esc(OA_SHORT)}">${oaMark("Sit.")}</th><th class="num" title="${esc(HELP_CITES)}">${oaMark("Sit. internasj.")}</th></tr>
       ${people.slice(0, 100).map(x => `<tr><td>${personLink(x.p)}</td><td>${esc(unitLabel(x.p))}</td><td class="num">${x.s.toFixed(2)}</td><td class="num">${x.n}</td><td class="num">${citeTotal(x.p)}</td><td class="num">${x.p.collab ? x.p.collab.cs[4] : 0}</td></tr>`).join("")}</table>`;
     $("#pubs").innerHTML = pubs.slice(0, 150).map(p => pubItem(p)).join("");
     const years = [...d3.rollup(pubs.filter(p => p.year), v => v.length, p => p.year).entries()].sort((a, b) => a[0] - b[0]);
@@ -1221,9 +1221,32 @@ function viewRelMatrix() {
 const SCOPE_LABELS = [["lui", "LUI", 2], ["oslomet", "annen OsloMet-enhet", 3], ["norway", "annen norsk institusjon", 4], ["international", "internasjonal", 5]];
 const SCOPE_COLORS = { lui: "#0d5c8a", oslomet: "#2ca02c", norway: "#9467bd", international: "#c75b12" };
 const CITE_LEVELS = [["group", "egen forskningsgruppe", 0], ["lui", "LUI", 1], ["oslomet", "annen OsloMet-enhet", 2], ["norway", "annen norsk institusjon", 3], ["international", "internasjonal", 4], ["unknown", "ukjent tilhørighet", 5]];
+const SHORT = { group: "gruppe", lui: "LUI", oslomet: "OsloMet", norway: "Norge", international: "intern.", unknown: "ukjent" };
 const CITE_COLORS = { group: "#08306b", lui: "#0d5c8a", oslomet: "#2ca02c", norway: "#9467bd", international: "#c75b12", unknown: "#bbb" };
 let HELP_CITES = "Siteringer hentet fra OpenAlex (siterende arbeider per DOI) og klassifisert etter de siterende forfatternes institusjoner: egen forskningsgruppe (en siterende LUI-forfatter deler forskningsgruppe med personen; delmengde av LUI), LUI (siterende arbeid har LUI-forfatter), annen OsloMet-enhet, annen norsk institusjon (alle siterende institusjoner i Norge), internasjonal (minst én institusjon utenfor Norge), ukjent (ingen institusjon registrert). Arbeider uten DOI, særlig norskspråklige, mangler i OpenAlex.";
 const citeTotal = p => p.collab ? p.collab.cites[0] : 0;
+/* Where OpenAlex-derived numbers can be wrong. Shown as a visible warning box and as ⚠ on every OpenAlex column. */
+function oaCaveats() {
+  const cov = D.meta.citeCoverage || {};
+  const covTxt = cov.total ? `Siterende arbeider er hittil hentet for ${cov.fetched} av ${cov.total} siterte arbeider (oppdateres daglig). Nivåtall som er lavere enn totalen betyr at resten ikke er hentet ennå – ikke at siteringene mangler.` : "";
+  return [
+    ["Dekning", "Bare arbeider med DOI som OpenAlex kjenner, teller. Norskspråklige bøker, kapitler og artikler i norske tidsskrifter mangler ofte, så tallene undervurderer særlig norskspråklig og praksisnær forskning. Null siteringer kan bety «ikke i OpenAlex»."],
+    ["Ufullstendig nedlasting", covTxt],
+    ["Nivå", "Nivået (gruppe/LUI/OsloMet/Norge/internasjonalt) bestemmes av institusjonene OpenAlex har registrert på de siterende forfatterne. Manglende eller feil institusjon gir «ukjent» eller feil land. «LUI» og «egen forskningsgruppe» krever at det siterende arbeidet også finnes i våre Cristin-data; ellers telles det som OsloMet, Norge eller internasjonalt."],
+    ["Telling", "Selvsiteringer er med. Preprint og publisert versjon kan telles dobbelt. Et siterende arbeid med forfattere fra flere land telles én gang, som internasjonalt."],
+  ].filter(([, t]) => t);
+}
+const OA_SHORT = "OpenAlex-tall: kan være feil eller ufullstendige (DOI-dekning, uferdig nedlasting, institusjonsdata). Se advarselen på siden.";
+function oaWarning(c) {
+  let per = "";
+  if (c) { const got = c.cs.slice(1).reduce((a, b) => a + b, 0); if (got < c.cites[0]) per = `<li><b>Denne personen:</b> nivåfordelingen bygger på ${got} av ${c.cites[0]} siteringer; ${c.cites[0] - got} er ikke hentet ennå.</li>`; }
+  return `<details class="oawarn"><summary>⚠ OpenAlex-tall kan være feil – les hvor</summary><ul>${per}${oaCaveats().map(([h, t]) => `<li><b>${esc(h)}:</b> ${esc(t)}</li>`).join("")}</ul></details>`;
+}
+const oaMark = (label, title) => `<span class="oa" title="${esc(title || OA_SHORT)}">${label} ⚠</span>`;
+function oaCoverFlag(c) {
+  const got = c.cs.slice(1).reduce((a, b) => a + b, 0);
+  return got < c.cites[0] ? `<span class="oaflag" title="Nivåfordelingen dekker ${got} av ${c.cites[0]} siteringer; resten er ikke hentet fra OpenAlex ennå.">⚠</span>` : "";
+}
 const HELP_COLLAB = {
   scope: "Andel av personens arbeider (alle kategorier, inntil 30 forfattere) som har minst én medforfatter i gruppen. Tilhørighet hentes fra Cristin-registreringen av hvert arbeid (institusjon og land). Et arbeid kan telle i flere grupper. Alene = ingen andre forfattere.",
   cites: "Siteringer fra OpenAlex (via DOI): interne = fra arbeider med LUI-forfatter (kjent fra våre data), eksterne = resten av OpenAlex-tallet. Norske arbeider uten DOI mangler siteringstall.",
@@ -1245,7 +1268,8 @@ function collabSection(p) {
     ${collabBar(c)}
     <p class="small muted">Ulike medforfattere: ${c.partners[0]} ved LUI, ${c.partners[1]} utenfor${c.countries.length ? ` · land: ${c.countries.map(([k, n]) => `${esc(k)} (${n})`).join(", ")}` : ""}</p>
     ${c.insts.length ? `<p class="small">Partnerinstitusjoner: ${c.insts.slice(0, 12).map(([k, n, cc]) => `${esc(k)}${cc && cc !== "NO" ? `, ${esc(cc)}` : ""} (${n})`).join(" · ")}</p>` : ""}
-    <h3 title="${esc(HELP_CITES)}">Siteringer etter nivå (OpenAlex: ${c.cites[0]} totalt) ⓘ</h3>
+    <h3 title="${esc(HELP_CITES)}">Siteringer etter nivå (${oaMark(`OpenAlex: ${c.cites[0]} totalt`)}) ⓘ</h3>
+    ${oaWarning(c)}
     <table class="tbl"><tr><th>Siterende arbeider fra</th><th class="num">Antall</th><th class="num">Andel</th></tr>
     ${CITE_LEVELS.map(([k, lab, i]) => { const tot = c.cs.slice(1).reduce((a, b) => a + b, 0) || 1; return `<tr><td><i class="sw" style="background:${CITE_COLORS[k]}"></i>${esc(lab)}</td><td class="num">${c.cs[i]}</td><td class="num">${k === "group" ? "" : Math.round(100 * c.cs[i] / tot) + " %"}</td></tr>`; }).join("")}</table>
     ${c.cCountries?.length ? `<p class="small muted">Siterende land utenfor Norge: ${c.cCountries.map(([k, n]) => `${esc(k)} (${n})`).join(", ")}</p>` : ""}`;
@@ -1256,9 +1280,10 @@ function viewCollab() {
     <p class="muted">Hvor stor del av arbeidene har medforfattere fra LUI, andre OsloMet-enheter, andre norske institusjoner og utlandet – per institutt og per person. Hold musepekeren over tallene for definisjoner.</p>
     <div class="toolbar" id="bar"></div>
     <div class="legend">${SCOPE_LABELS.map(([k, lab]) => `<span><i style="background:${SCOPE_COLORS[k]}"></i>${esc(lab)}</span>`).join("")}</div>
-    <h2>Per institutt</h2><div id="units"></div>
+    ${oaWarning()}
+    <h2>Per institutt</h2><div id="units" class="fittbl"></div>
     <h2>Partnerland og -institusjoner</h2><div id="partners" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem"></div>
-    <h2>Per person</h2><div class="toolbar no-print"><button type="button" id="csv">Last ned (CSV)</button></div><div id="people"></div>`;
+    <h2>Per person</h2><div class="toolbar no-print"><button type="button" id="csv">Last ned (CSV)</button></div><div id="people" class="fittbl"></div>`;
   let current = [], instFilter = getQS().inst || "";
   filterBar($("#bar"), [
     { id: "unit", type: "select", label: "institutt", options: unitOptions() },
@@ -1278,7 +1303,7 @@ function viewCollab() {
     const byUnit = new Map();
     for (const p of people) { const u = unitLabel(p); if (!byUnit.has(u)) byUnit.set(u, { n: 0, v: [0, 0, 0, 0, 0, 0], cites: [0, 0, 0], countries: new Map() }); const g = byUnit.get(u); g.n++; p.collab[key].forEach((x, i) => g.v[i] += x); p.collab.cites.forEach((x, i) => g.cites[i] += x); for (const [c, n] of p.collab.countries) g.countries.set(c, (g.countries.get(c) || 0) + n); }
     for (const p of people) { const g = byUnit.get(unitLabel(p)); g.cs = g.cs || [0, 0, 0, 0, 0, 0]; p.collab.cs.forEach((x, i) => g.cs[i] += x); }
-    $("#units").innerHTML = `<table class="tbl"><tr><th>Institutt</th><th class="num">Personer</th><th class="num">Arbeider</th>${SCOPE_LABELS.map(([k, lab]) => `<th class="num" title="${esc(HELP_COLLAB.scope)}">${esc(lab)} %</th>`).join("")}<th class="num">Alene %</th><th class="num" title="Sum OpenAlex-siteringer for personenes arbeider">Sit.</th><th class="num" title="Andel eksterne siteringer: siteringer fra arbeider uten LUI-forfatter delt på alle klassifiserte siteringer">Eksterne sit. %</th>${CITE_LEVELS.map(([k, lab]) => `<th class="num" title="${esc(HELP_CITES)}">Sit. ${esc(lab)}</th>`).join("")}<th>Fordeling</th></tr>
+    $("#units").innerHTML = `<table class="tbl"><tr><th>Institutt</th><th class="num">Personer</th><th class="num">Arbeider</th>${SCOPE_LABELS.map(([k, lab]) => `<th class="num" title="Medforfattere fra ${esc(lab)}: ${esc(HELP_COLLAB.scope)}">${esc(SHORT[k])} %</th>`).join("")}<th class="num">Alene %</th><th class="num" title="Sum OpenAlex-siteringer for personenes arbeider. ${esc(OA_SHORT)}">${oaMark("Sit.")}</th><th class="num" title="Andel eksterne siteringer: siteringer fra arbeider uten LUI-forfatter delt på alle klassifiserte siteringer. ${esc(OA_SHORT)}">${oaMark("Ekst. sit. %")}</th>${CITE_LEVELS.map(([k, lab]) => `<th class="num" title="Siteringer fra ${esc(lab)}. ${esc(HELP_CITES)}">${oaMark(`Sit. ${esc(SHORT[k])}`)}</th>`).join("")}<th>Fordeling</th></tr>
       ${[...byUnit.entries()].sort((a, b) => b[1].v[0] - a[1].v[0]).map(([u, g]) => { const ctot = g.cs.slice(1).reduce((a, b) => a + b, 0); return `<tr><td>${esc(u)}</td><td class="num">${g.n}</td><td class="num">${g.v[0]}</td>${SCOPE_LABELS.map(([, , i]) => `<td class="num">${pct(g.v[i], g.v[0])}</td>`).join("")}<td class="num">${pct(g.v[1], g.v[0])}</td><td class="num">${g.cites[0]}</td><td class="num">${ctot ? Math.round(100 * (ctot - g.cs[1]) / ctot) + " %" : ""}</td>${CITE_LEVELS.map(([, , i]) => `<td class="num">${g.cs[i]}</td>`).join("")}<td style="min-width:160px">${collabBar({ n: g.v, r: g.v }, false)}</td></tr>`; }).join("")}</table>`;
     const countries = new Map(), instNO = new Map(), instINT = new Map();
     for (const p of people) { for (const [c, n] of p.collab.countries) countries.set(c, (countries.get(c) || 0) + n);
@@ -1292,8 +1317,8 @@ function viewCollab() {
       ${tbl("Internasjonale institusjoner 🌍", instINT)}`;
     if (f.inst) $("#partners").insertAdjacentHTML("afterbegin", `<div class="notice" style="grid-column:1/-1">Viser personer med medforfattere ved <b>${esc(f.inst)}</b> <a href="#" data-inst="">× fjern</a></div>`);
     current = people.slice().sort((a, b) => b.collab[key][0] - a.collab[key][0]);
-    $("#people").innerHTML = `<table class="tbl"><tr><th>Person</th><th>Institutt</th><th class="num">Arbeider</th>${SCOPE_LABELS.map(([k, lab]) => `<th class="num" title="${esc(HELP_COLLAB.scope)}">${esc(lab)} %</th>`).join("")}<th class="num">Land</th><th class="num" title="Sum OpenAlex-siteringer">Sit.</th><th class="num" title="Andel eksterne siteringer: siteringer fra arbeider uten LUI-forfatter delt på alle klassifiserte siteringer (OpenAlex). Tom når personen ikke har siteringer.">Eksterne sit. %</th>${CITE_LEVELS.map(([k, lab]) => `<th class="num" title="${esc(HELP_CITES)}">Sit. ${esc(lab)}</th>`).join("")}<th>Fordeling</th></tr>
-      ${current.slice(0, 400).map(p => { const v = p.collab[key]; const cs = p.collab.cs; const ctot = cs.slice(1).reduce((a, b) => a + b, 0); const extPct = ctot ? Math.round(100 * (ctot - cs[1]) / ctot) : null; return `<tr><td>${personLink(p)}</td><td>${esc(unitLabel(p))}</td><td class="num">${v[0]}</td>${SCOPE_LABELS.map(([, , i]) => `<td class="num">${pct(v[i], v[0])}</td>`).join("")}<td class="num">${p.collab.countries.length}</td><td class="num">${p.collab.cites[0]}</td><td class="num">${extPct == null ? "" : extPct + " %"}</td>${CITE_LEVELS.map(([, , i]) => `<td class="num">${cs[i]}</td>`).join("")}<td style="min-width:140px">${collabBar(p.collab, !!f.recent)}</td></tr>`; }).join("")}</table>`;
+    $("#people").innerHTML = `<table class="tbl"><tr><th>Person</th><th>Institutt</th><th class="num">Arbeider</th>${SCOPE_LABELS.map(([k, lab]) => `<th class="num" title="Medforfattere fra ${esc(lab)}: ${esc(HELP_COLLAB.scope)}">${esc(SHORT[k])} %</th>`).join("")}<th class="num" title="Antall land med internasjonale medforfattere">Land</th><th class="num" title="Sum OpenAlex-siteringer. ${esc(OA_SHORT)}">${oaMark("Sit.")}</th><th class="num" title="Andel eksterne siteringer: siteringer fra arbeider uten LUI-forfatter delt på alle klassifiserte siteringer (OpenAlex). Tom når personen ikke har siteringer. ⚠ i cellen = ikke alle siterende arbeider er hentet ennå.">${oaMark("Ekst. sit. %")}</th>${CITE_LEVELS.map(([k, lab]) => `<th class="num" title="Siteringer fra ${esc(lab)}. ${esc(HELP_CITES)}">${oaMark(`Sit. ${esc(SHORT[k])}`)}</th>`).join("")}<th>Fordeling</th></tr>
+      ${current.slice(0, 400).map(p => { const v = p.collab[key]; const cs = p.collab.cs; const ctot = cs.slice(1).reduce((a, b) => a + b, 0); const extPct = ctot ? Math.round(100 * (ctot - cs[1]) / ctot) : null; return `<tr><td>${personLink(p)}</td><td>${esc(unitLabel(p))}</td><td class="num">${v[0]}</td>${SCOPE_LABELS.map(([, , i]) => `<td class="num">${pct(v[i], v[0])}</td>`).join("")}<td class="num">${p.collab.countries.length}</td><td class="num">${p.collab.cites[0]}</td><td class="num">${extPct == null ? "" : extPct + " %"}${oaCoverFlag(p.collab)}</td>${CITE_LEVELS.map(([, , i]) => `<td class="num">${cs[i]}</td>`).join("")}<td style="min-width:140px">${collabBar(p.collab, !!f.recent)}</td></tr>`; }).join("")}</table>`;
     $("#f_count").textContent = `${people.length} personer`;
   });
   $("#partners").addEventListener("click", ev => { const a = ev.target.closest("a[data-inst]"); if (!a) return; ev.preventDefault(); instFilter = a.dataset.inst; $("#f_unit").dispatchEvent(new Event("input", { bubbles: true })); if (instFilter) window.scrollTo({ top: $("#people").offsetTop - 80, behavior: "smooth" }); });
@@ -1309,7 +1334,9 @@ function viewAbout() {
     <h2>Datagrunnlag</h2>
     <ul><li><b>Ansatte og presentasjoner:</b> ansattoversikten på oslomet.no (${n} personer, både vitenskapelige og administrative), inkludert forskningsgrupper og prosjekter.</li>
     <li><b>Publikasjoner, medforfattere og prosjekter:</b> Cristin og Nasjonalt vitenarkiv (NVA), inkludert sammendrag, emneord og åpne fulltekster (innledning og konklusjon brukes i tematiseringen).</li>
-    <li><b>Siteringer, fagfelt og nøkkelord:</b> OpenAlex (via DOI). Dekningen for norskspråklige arbeider er ufullstendig; siteringstall må leses med det i mente.</li></ul>
+    <li><b>Siteringer, fagfelt og nøkkelord:</b> OpenAlex (via DOI). Alle OpenAlex-tall er merket med ⚠ i kartet.</li></ul>
+    <h2>⚠ Hvor OpenAlex-tallene kan være feil</h2>
+    <ul>${oaCaveats().map(([h, t]) => `<li><b>${esc(h)}:</b> ${esc(t)}</li>`).join("")}</ul>
     <h2>Personkrets</h2>
     <p>Standardvisningen omfatter ansatte i LUIs ansattoversikt. Via «personer»-filteret kan du utvide til tidligere eller ikke-listede LUI-tilknyttede, andre OsloMet-ansatte og eksterne medforfattere. Eksterne noder bærer færre attributter: navn, institusjon, land, eventuelt ORCID og antall felles publikasjoner (artikler med mer enn 30 forfattere er holdt utenfor).</p>
     <h2>Filtre</h2>

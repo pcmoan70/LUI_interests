@@ -121,3 +121,19 @@ i.sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; mar
 .scrolltbl table.tbl th.num, .scrolltbl table.tbl td.num { width: 3.6em; }
 .scrolltbl table.tbl th:first-child { width: auto; }
 .scrolltbl table.tbl th { position: sticky; top: 0; background: var(--card); }
+
+.fittbl { overflow-x: auto; }
+.fittbl table.tbl { width: 100%; table-layout: fixed; display: table; white-space: normal; }
+.fittbl table.tbl th, .fittbl table.tbl td { white-space: normal; overflow-wrap: anywhere; padding: 0.25rem 0.3rem; font-size: 0.85rem; }
+.fittbl table.tbl th.num, .fittbl table.tbl td.num { width: 3.4em; }
+.fittbl table.tbl td:last-child, .fittbl table.tbl th:last-child { width: 110px; }
+.fittbl .cbar { margin: 0; }
+
+/* OpenAlex-derived numbers: visibly marked as uncertain */
+.oa { border-bottom: 2px dotted #c75b12; cursor: help; }
+.oaflag { color: #c75b12; margin-left: 0.2em; cursor: help; }
+.oawarn { border-left: 4px solid #c75b12; background: rgba(199, 91, 18, 0.08); padding: 0.4rem 0.7rem; margin: 0.6rem 0; border-radius: 4px; font-size: 0.9rem; }
+.oawarn summary { cursor: pointer; font-weight: 600; color: #8a3d05; }
+.oawarn ul { margin: 0.4rem 0 0.2rem; padding-left: 1.2rem; }
+.oawarn li { margin: 0.2rem 0; }
+@media print { .oawarn { break-inside: avoid; } .oawarn[open] summary { list-style: none; } }
