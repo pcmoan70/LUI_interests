@@ -28,6 +28,45 @@ def ensure_table(con) -> None:
     if "c_countries_json" not in {r[1] for r in con.execute("PRAGMA table_info(person_collab)")}:
         con.execute("ALTER TABLE person_collab ADD COLUMN c_countries_json TEXT")
     con.execute("""CREATE TABLE IF NOT EXISTS institution (inst_id TEXT PRIMARY KEY, name TEXT, country TEXT)""")
+    con.execute("""CREATE TABLE IF NOT EXISTS person_openalex (
+        person_id TEXT PRIMARY KEY, n_pubs INTEGER, n_doi INTEGER, n_openalex INTEGER, n_cited INTEGER, n_cites_fetched INTEGER,
+        cites_total INTEGER, cites_classified INTEGER, updated TEXT)""")
+
+
+def log_openalex_coverage(con, lui: set[str]) -> dict:
+    """Per person: how much OpenAlex data we have (works with DOI, works found in OpenAlex, cited works,
+    cited works whose citing works are downloaded). Stored in person_openalex and data/derived/openalex_coverage.csv."""
+    import csv
+    from ..paths import DERIVED_DIR
+    fetched = {r[0] for r in con.execute("SELECT DISTINCT cited_pub_id FROM citing_work")} if con.execute(
+        "SELECT 1 FROM sqlite_master WHERE name='citing_work'").fetchone() else set()
+    classified = Counter()
+    for cited, n in con.execute("SELECT cited_pub_id, COUNT(*) FROM citing_work GROUP BY 1") if fetched else []:
+        classified[cited] = n
+    pubs = {r[0]: r[1:] for r in con.execute("SELECT pub_id, doi, openalex_work_id, COALESCE(cited_by_count,0) FROM publication")}
+    per: dict[str, Counter] = defaultdict(Counter)
+    for pub_id, pid in con.execute("SELECT DISTINCT pub_id, person_id FROM publication_author WHERE person_id IS NOT NULL"):
+        if pid not in lui or pub_id not in pubs:
+            continue
+        doi, wid, cited = pubs[pub_id]
+        c = per[pid]
+        c["pubs"] += 1; c["doi"] += bool(doi); c["openalex"] += bool(wid); c["cited"] += cited > 0
+        c["fetched"] += pub_id in fetched; c["cites_total"] += cited; c["cites_classified"] += classified[pub_id]
+    today = date.today().isoformat()
+    names = dict(con.execute("SELECT person_id, name_full FROM person"))
+    con.execute("DELETE FROM person_openalex")
+    rows = [(pid, c["pubs"], c["doi"], c["openalex"], c["cited"], c["fetched"], c["cites_total"], c["cites_classified"], today) for pid, c in per.items()]
+    con.executemany("INSERT INTO person_openalex VALUES (?,?,?,?,?,?,?,?,?)", rows)
+    con.commit()
+    with (DERIVED_DIR / "openalex_coverage.csv").open("w", newline="", encoding="utf-8") as fh:
+        w = csv.writer(fh, delimiter=";")
+        w.writerow(["person_id", "name", "pubs", "pubs_with_doi", "pubs_in_openalex", "pubs_cited", "pubs_citing_works_fetched", "cites_total", "cites_classified", "status", "updated"])
+        for pid, *vals, _ in sorted(rows, key=lambda r: names.get(r[0]) or ""):
+            n_pubs, _, n_oa, n_cited, n_fetched, tot, cls = vals
+            status = "none" if not n_oa else "complete" if n_fetched == n_cited and cls >= tot else "partial"
+            w.writerow([pid, names.get(pid), *vals, status, today])
+    n_oa = sum(1 for r in rows if r[3]); n_done = sum(1 for r in rows if r[3] and r[5] == r[4] and r[7] >= r[6])
+    return {"persons": len(rows), "with_openalex": n_oa, "complete": n_done}
 
 
 def run(refresh=False, max_age=365, limit=None) -> None:
@@ -131,5 +170,6 @@ def run(refresh=False, max_age=365, limit=None) -> None:
         con.executemany("INSERT INTO person_collab VALUES (" + ",".join("?" * 29) + ")", rows)
         con.commit()
         log["rows"] = len(rows)
-        log["notes"] = f"{len(rows)} persons; {len(known)} institutions"
+        cov = log_openalex_coverage(con, lui)
+        log["notes"] = f"{len(rows)} persons; {len(known)} institutions; OpenAlex data for {cov['with_openalex']}/{cov['persons']} persons, complete for {cov['complete']} (data/derived/openalex_coverage.csv)"
     print("collab:", log["notes"])

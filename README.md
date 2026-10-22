@@ -71,6 +71,7 @@ processes only N items for debugging.
 | `externals` | Promotes external coauthors to light nodes (institution, country, ORCID for frequent coauthors, joint count); categories `former_lui`, `oslomet`, `external` | `person` (is_listed = 0) |
 | `build-edges` | Person–person edges: coauthor, cites, shared_group, shared_project, topic_similarity | `person_edge` |
 | `build-matrices` | Matrices as `.npz`, Louvain communities, spectral and co-cluster block orderings | `data/derived/matrices.npz`, `orders.json` |
+| `build-collab` | Collaboration profile per person (coauthor scope, partner institutions, citation levels) and a per-person log of how much OpenAlex data exists: works with DOI, works found in OpenAlex, cited works, cited works whose citing works are downloaded, status `none` / `partial` / `complete` | `person_collab`, `person_openalex`, `data/derived/openalex_coverage.csv` |
 | `export-web` | JSON bundles for the web app (never e-mail or full text) | `web/data/` |
 | `export-graph` | GraphML, GEXF and CSV node/edge lists for Gephi, R, Python | `data/derived/person_graph.*` |
 | `verify` | Coverage and invariant report | console |

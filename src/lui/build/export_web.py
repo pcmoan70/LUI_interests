@@ -86,6 +86,9 @@ def run(refresh=False, max_age=None, limit=None) -> None:
                                       "partners": [r["partners_lui"], r["partners_ext"]], "cites": [r["cites_total"], r["cites_internal"], r["cites_external"]],
                                       "cs": [r["c_group"] or 0, r["c_lui"] or 0, r["c_oslomet"] or 0, r["c_norway"] or 0, r["c_international"] or 0, r["c_unknown"] or 0],
                                       "cCountries": json.loads(r["c_countries_json"] or "[]")}
+    oa_cov = {}
+    if con.execute("SELECT 1 FROM sqlite_master WHERE name='person_openalex'").fetchone():
+        oa_cov = {r[0]: list(r[1:]) for r in con.execute("SELECT person_id, n_pubs, n_doi, n_openalex, n_cited, n_cites_fetched FROM person_openalex")}
     persons = []
     for r in con.execute("SELECT * FROM person"):
         pid = r["person_id"]
@@ -109,7 +112,7 @@ def run(refresh=False, max_age=None, limit=None) -> None:
             "thin": int(n_core.get(pid, 0) < 2 and not bio),
             "aff": r["affiliation"], "country": r["country"], "nJoint": r["n_joint"],
             "yrs": sorted(yrs_core[pid]), "yrsAll": sorted(yrs_all[pid]),
-            "collab": collab.get(pid),
+            "collab": collab.get(pid), "oa": oa_cov.get(pid),
         })
 
     # ---- publications (metadata only; those with at least one known person)

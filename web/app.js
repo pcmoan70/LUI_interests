@@ -1239,13 +1239,17 @@ function oaCaveats() {
 const OA_SHORT = "OpenAlex-tall: kan være feil eller ufullstendige (DOI-dekning, uferdig nedlasting, institusjonsdata). Se advarselen på siden.";
 function oaWarning(c) {
   let per = "";
-  if (c) { const got = c.cs.slice(1).reduce((a, b) => a + b, 0); if (got < c.cites[0]) per = `<li><b>Denne personen:</b> nivåfordelingen bygger på ${got} av ${c.cites[0]} siteringer; ${c.cites[0] - got} er ikke hentet ennå.</li>`; }
+  if (c) {
+    const got = c.cs.slice(1).reduce((a, b) => a + b, 0);
+    if (c.oa) per += `<li><b>Denne personen:</b> ${c.oa[2]} av ${c.oa[0]} arbeider finnes i OpenAlex (${c.oa[1]} har DOI); ${c.oa[3]} av dem er sitert, og siterende arbeider er hentet for ${c.oa[4]} av disse.</li>`;
+    if (got < c.cites[0]) per += `<li><b>Denne personen:</b> nivåfordelingen bygger på ${got} av ${c.cites[0]} siteringer; ${c.cites[0] - got} ${c.oa && c.oa[4] >= c.oa[3] ? "finnes i OpenAlex sitt siteringstall, men ikke i listen over siterende arbeider (avvik hos OpenAlex)" : "er ikke hentet ennå"}.</li>`;
+  }
   return `<details class="oawarn"><summary>⚠ OpenAlex-tall kan være feil – les hvor</summary><ul>${per}${oaCaveats().map(([h, t]) => `<li><b>${esc(h)}:</b> ${esc(t)}</li>`).join("")}</ul></details>`;
 }
 const oaMark = (label, title) => `<span class="oa" title="${esc(title || OA_SHORT)}">${label} ⚠</span>`;
 function oaCoverFlag(c) {
   const got = c.cs.slice(1).reduce((a, b) => a + b, 0);
-  return got < c.cites[0] ? `<span class="oaflag" title="Nivåfordelingen dekker ${got} av ${c.cites[0]} siteringer; resten er ikke hentet fra OpenAlex ennå.">⚠</span>` : "";
+  return got < c.cites[0] ? `<span class="oaflag" title="Nivåfordelingen dekker ${got} av ${c.cites[0]} siteringer; resten er ikke hentet fra OpenAlex ennå, eller mangler i OpenAlex sin liste over siterende arbeider.">⚠</span>` : "";
 }
 const HELP_COLLAB = {
   scope: "Andel av personens arbeider (alle kategorier, inntil 30 forfattere) som har minst én medforfatter i gruppen. Tilhørighet hentes fra Cristin-registreringen av hvert arbeid (institusjon og land). Et arbeid kan telle i flere grupper. Alene = ingen andre forfattere.",
@@ -1269,7 +1273,7 @@ function collabSection(p) {
     <p class="small muted">Ulike medforfattere: ${c.partners[0]} ved LUI, ${c.partners[1]} utenfor${c.countries.length ? ` · land: ${c.countries.map(([k, n]) => `${esc(k)} (${n})`).join(", ")}` : ""}</p>
     ${c.insts.length ? `<p class="small">Partnerinstitusjoner: ${c.insts.slice(0, 12).map(([k, n, cc]) => `${esc(k)}${cc && cc !== "NO" ? `, ${esc(cc)}` : ""} (${n})`).join(" · ")}</p>` : ""}
     <h3 title="${esc(HELP_CITES)}">Siteringer etter nivå (${oaMark(`OpenAlex: ${c.cites[0]} totalt`)}) ⓘ</h3>
-    ${oaWarning(c)}
+    ${oaWarning({ ...c, oa: p.oa })}
     <table class="tbl"><tr><th>Siterende arbeider fra</th><th class="num">Antall</th><th class="num">Andel</th></tr>
     ${CITE_LEVELS.map(([k, lab, i]) => { const tot = c.cs.slice(1).reduce((a, b) => a + b, 0) || 1; return `<tr><td><i class="sw" style="background:${CITE_COLORS[k]}"></i>${esc(lab)}</td><td class="num">${c.cs[i]}</td><td class="num">${k === "group" ? "" : Math.round(100 * c.cs[i] / tot) + " %"}</td></tr>`; }).join("")}</table>
     ${c.cCountries?.length ? `<p class="small muted">Siterende land utenfor Norge: ${c.cCountries.map(([k, n]) => `${esc(k)} (${n})`).join(", ")}</p>` : ""}`;
@@ -1322,8 +1326,8 @@ function viewCollab() {
     $("#f_count").textContent = `${people.length} personer`;
   });
   $("#partners").addEventListener("click", ev => { const a = ev.target.closest("a[data-inst]"); if (!a) return; ev.preventDefault(); instFilter = a.dataset.inst; $("#f_unit").dispatchEvent(new Event("input", { bubbles: true })); if (instFilter) window.scrollTo({ top: $("#people").offsetTop - 80, behavior: "smooth" }); });
-  $("#csv").addEventListener("click", () => downloadCSV("lui-samarbeid.csv", [["navn", "institutt", "arbeider", "alene", "lui", "oslomet", "norge", "internasjonalt", "land", "siteringer_total", "eksterne_sit_prosent", "sit_gruppe", "sit_lui", "sit_oslomet", "sit_norge", "sit_internasjonalt", "sit_ukjent"],
-    ...current.map(p => { const cs = p.collab.cs, ctot = cs.slice(1).reduce((a, b) => a + b, 0); return [p.name, unitLabel(p), p.collab.n[0], p.collab.n[1], p.collab.n[2], p.collab.n[3], p.collab.n[4], p.collab.n[5], p.collab.countries.length, p.collab.cites[0], ctot ? Math.round(100 * (ctot - cs[1]) / ctot) : "", ...cs]; })]));
+  $("#csv").addEventListener("click", () => downloadCSV("lui-samarbeid.csv", [["navn", "institutt", "arbeider", "alene", "lui", "oslomet", "norge", "internasjonalt", "land", "siteringer_total", "eksterne_sit_prosent", "sit_gruppe", "sit_lui", "sit_oslomet", "sit_norge", "sit_internasjonalt", "sit_ukjent", "arbeider_i_openalex", "arbeider_med_doi", "siterte_arbeider", "siterende_hentet_for"],
+    ...current.map(p => { const cs = p.collab.cs, ctot = cs.slice(1).reduce((a, b) => a + b, 0); return [p.name, unitLabel(p), p.collab.n[0], p.collab.n[1], p.collab.n[2], p.collab.n[3], p.collab.n[4], p.collab.n[5], p.collab.countries.length, p.collab.cites[0], ctot ? Math.round(100 * (ctot - cs[1]) / ctot) : "", ...cs, ...(p.oa ? [p.oa[2], p.oa[1], p.oa[3], p.oa[4]] : ["", "", "", ""])]; })]));
 }
 
 /* ---------------- about ---------------- */
