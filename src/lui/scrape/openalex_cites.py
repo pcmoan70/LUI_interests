@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 
 from ..db import connect, init_db, run_log
-from ..http import Fetcher
+from ..http import Fetcher, QuotaExhausted
 
 API = "https://api.openalex.org"
 MAILTO = "pcmoan@gmail.com"
@@ -46,14 +46,16 @@ def run(refresh=False, max_age=30, limit=None) -> None:
     init_db()
     con = connect()
     ensure_table(con)
-    f = Fetcher("openalex", max_age_days=max_age, refresh=refresh)
+    f = Fetcher("openalex", max_age_days=max_age, refresh=refresh, budget=900, keep_remaining=20)   # well inside the 1 000/day free quota
     ours = dict(con.execute("SELECT openalex_work_id, pub_id FROM publication WHERE openalex_work_id IS NOT NULL"))
     todo = [(w, p) for w, p in con.execute("SELECT openalex_work_id, pub_id FROM publication WHERE openalex_work_id IS NOT NULL AND COALESCE(cited_by_count,0) > 0")]
     if limit:
         todo = todo[:limit]
     print(f"citing works for {len(todo)} cited publications", flush=True)
     n_rows = 0
+    stopped = None
     with run_log(con, "scrape-openalex-cites") as log:
+      try:
         for i, (wid, pub_id) in enumerate(todo, 1):
             cursor = "*"; page = 0
             while cursor:
@@ -71,6 +73,11 @@ def run(refresh=False, max_age=30, limit=None) -> None:
             con.commit()
             if i % 200 == 0:
                 print(f"  {i}/{len(todo)} cited works, {n_rows} citations ({f.stats()})", flush=True)
-        log["rows"] = n_rows
-        log["notes"] = f"{len(todo)} cited works; {n_rows} citing works; {f.stats()}"
+      except QuotaExhausted as e:
+        stopped = str(e)
+        con.commit()
+        print(f"  quota exhausted ({e}); stopping for today, will resume from the cache next run", flush=True)
+      done_n = con.execute("SELECT COUNT(DISTINCT cited_pub_id) FROM citing_work").fetchone()[0]
+      log["rows"] = n_rows
+      log["notes"] = f"{done_n}/{len(todo)} cited works covered; {n_rows} citing works this run; {f.stats()}" + (f"; stopped: {stopped}" if stopped else "")
     print("done:", log["notes"])

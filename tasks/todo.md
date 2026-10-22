@@ -90,7 +90,7 @@ Plan: see ../PLAN.md. Tick items as they are completed; add a Review section per
 - [x] Second-degree relation 'Via felles kontakt' (two LUI persons sharing a coauthor/citation contact without being coauthors; weight = number of shared contacts, intermediaries as evidence; dashed in graph) (user request 2026-10-21)
 - [x] Collaboration profiles (`lui build-collab`): coauthor scope LUI / other OsloMet / other Norwegian / international from Cristin affiliations (909 institutions resolved), partner institutions and countries, internal vs external citations; person-page section and `#/collab` overview per department with CSV (user request 2026-10-22)
 - [x] Citation levels (`lui scrape-openalex-cites` + collab): citing works classified as own research group / LUI / other OsloMet / Norwegian / international / unknown; sums per person, department and topic; sortable external-citation share; partner institution tables (Norwegian + international, country markers, Cristin links, click-to-filter, unique external authors) (user requests 2026-10-22)
-- [ ] Finish citing-works fetch after OpenAlex daily credit reset (1 000 of 2 799 cited works done): `lui scrape-openalex-cites && lui build-collab && lui export-web`
+- [x] Scheduled daily task (Windows Task Scheduler, 07:15) `scripts/update_cites.cmd`: citing-works fetch within quota (budget 900/run, stops when <20 credits remain or on 429), build-collab, export-web, commit+push; log in data/scheduled.log. 1 000 of 2 799 cited works done; finishes over ~2 more days
 - [ ] Playwright batch PDF export
 - [ ] nb/en toggle, accessibility pass
 

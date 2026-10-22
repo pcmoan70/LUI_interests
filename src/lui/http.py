@@ -13,6 +13,10 @@ import httpx
 
 from .paths import RAW_DIR
 
+class QuotaExhausted(Exception):
+    """Raised when an API's daily quota is used up (retry-after is hours away)."""
+
+
 USER_AGENT = "LUI-research-map/0.1 (OsloMet internal research mapping; contact pcmoan@gmail.com)"
 
 # minimum seconds between requests, per host
@@ -42,8 +46,10 @@ def safe_key(s: str, maxlen: int = 150) -> str:
 
 
 class Fetcher:
-    def __init__(self, source: str, max_age_days: float | None = 30, refresh: bool = False):
+    def __init__(self, source: str, max_age_days: float | None = 30, refresh: bool = False, budget: int | None = None, keep_remaining: int = 10):
         self.source = source
+        self.budget = budget                  # max network requests this run (None = unlimited)
+        self.keep_remaining = keep_remaining  # stop when the API reports fewer remaining daily credits than this
         self.dir = RAW_DIR / source
         self.dir.mkdir(parents=True, exist_ok=True)
         self.max_age = None if max_age_days is None else max_age_days * 86400
@@ -73,6 +79,8 @@ class Fetcher:
                 return body_p.read_bytes()
 
         host = urlparse(url).netloc
+        if self.budget is not None and self.n_network >= self.budget:
+            raise QuotaExhausted(f"{host}: run budget of {self.budget} requests used")
         for attempt in range(9):
             _throttle(host)
             try:
@@ -82,15 +90,25 @@ class Fetcher:
                     raise
                 time.sleep(2 ** attempt)
                 continue
-            if r.status_code == 429 and attempt < 8:          # rate limited: honour Retry-After, otherwise back off hard
+            if r.status_code == 429:                          # rate limited
                 ra = r.headers.get("retry-after")
-                time.sleep(float(ra) if ra and ra.replace(".", "", 1).isdigit() else min(120, 15 * (attempt + 1)))
+                wait = float(ra) if ra and ra.replace(".", "", 1).isdigit() else min(120, 15 * (attempt + 1))
+                if wait > 600 or attempt >= 8:                # daily quota exhausted: give up now, resume on a later run
+                    raise QuotaExhausted(f"{host}: rate limit, retry after {int(wait)} s")
+                time.sleep(wait)
                 continue
             if r.status_code in (500, 502, 503, 504) and attempt < 8:
                 time.sleep(min(60, 2 ** attempt * 2))
                 continue
             break
         self.n_network += 1
+        # proactive: respect the API's own daily credit counter and stop before it hits zero
+        rem = r.headers.get("x-ratelimit-remaining")
+        if rem is not None and rem.isdigit() and int(rem) < self.keep_remaining:
+            body_p.write_bytes(r.content) if r.status_code == 200 else None
+            meta_p.write_text(json.dumps({"url": url, "status": r.status_code, "fetched_at": datetime.now(timezone.utc).isoformat(),
+                                          "fetched_ts": time.time(), "etag": r.headers.get("etag"), "content_type": r.headers.get("content-type")}), encoding="utf-8")
+            raise QuotaExhausted(f"{host}: only {rem} daily credits left (reset in {r.headers.get('x-ratelimit-reset', '?')} s)")
         meta = {
             "url": url, "status": r.status_code, "fetched_at": datetime.now(timezone.utc).isoformat(),
             "fetched_ts": time.time(), "etag": r.headers.get("etag"),
