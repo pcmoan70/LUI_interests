@@ -1,4 +1,4 @@
-"""CLI: python -m lui <stage> [--refresh] [--max-age DAYS]"""
+"""CLI: python -m lui <stage> [--refresh] [--max-age DAYS] [--fresh PREFIX,...] [--since YYYY-MM-DD|auto]"""
 from __future__ import annotations
 
 import argparse
@@ -33,6 +33,8 @@ def main() -> None:
     ap.add_argument("--max-age", type=float, default=30, help="cache max age in days")
     ap.add_argument("--limit", type=int, default=None, help="process only N items (debug)")
     ap.add_argument("-k", type=int, default=150, help="number of clusters (cluster stage)")
+    ap.add_argument("--fresh", default="", help="scrape stages: comma-separated cache-key prefixes to always refetch (listings)")
+    ap.add_argument("--since", default=None, help="scrape-cristin/-nva: only records modified since this date (YYYY-MM-DD or 'auto' = day before last run)")
     a = ap.parse_args()
     mod, fn = STAGES[a.stage].split(":")
     func = getattr(importlib.import_module(mod), fn)
@@ -40,6 +42,10 @@ def main() -> None:
         func()
     else:
         kw = {"k": a.k} if a.stage in ("cluster", "tag") else {}
+        if a.stage.startswith("scrape-") and a.stage != "scrape-pdf":
+            kw["fresh"] = tuple(x for x in a.fresh.split(",") if x)
+        if a.stage in ("scrape-cristin", "scrape-nva"):
+            kw["since"] = a.since
         func(refresh=a.refresh, max_age=a.max_age, limit=a.limit, **kw)
 
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import json
 
-from ..db import connect, init_db, run_log, upsert
+from ..db import connect, init_db, run_log, since_date, upsert
 from ..http import Fetcher
 
 API = "https://api.cristin.no/v2"
@@ -113,10 +113,33 @@ def store_contributors(con, rid: str, contribs: list[dict]) -> None:
         }, keys=["pub_id", "author_order"])
 
 
-def run(refresh=False, max_age=30, limit=None) -> None:
+def update_modified(con, f: Fetcher, since: str, lui_ids: set[str]) -> tuple[int, int]:
+    """What's new: results and projects modified in Cristin since `since` (YYYY-MM-DD). Contributor lists of
+    modified results are replaced, so author changes and affiliation corrections are picked up."""
+    n_res = n_proj = 0
+    for r in paged(f, f"{API}/results?unit={FACULTY}&modified_since={since}&fields=all", f"results_modified_{since}", per_page=500):
+        rid = r["cristin_result_id"]
+        contribs = f.get_json(f"{API}/results/{rid}/contributors", key=f"contrib_{rid}", force=True)
+        store_result(con, r)
+        if isinstance(contribs, list):
+            con.execute("DELETE FROM publication_author WHERE pub_id=?", (rid,))
+            store_contributors(con, rid, contribs)
+        con.commit()
+        n_res += 1
+    for pr in paged(f, f"{API}/projects?institution={INST}&modified_since={since}", f"projects_modified_{since}", per_page=500):
+        cid = pr["cristin_project_id"]
+        d = f.get_json(f"{API}/projects/{cid}", key=f"project_{cid}", force=True) or {}
+        coord = (d.get("coordinating_institution") or {}).get("unit", {}).get("cristin_unit_id", "")
+        if coord.startswith("215.4") or any(x.get("cristin_person_id") in lui_ids for x in d.get("participants", [])):
+            n_proj += 1
+    return n_res, n_proj
+
+
+def run(refresh=False, max_age=30, limit=None, fresh=(), since=None) -> None:
     init_db()
     con = connect()
-    f = Fetcher("cristin", max_age_days=max_age, refresh=refresh)
+    f = Fetcher("cristin", max_age_days=max_age, refresh=refresh, fresh=fresh)
+    since = since_date(con, "scrape-cristin", since)
 
     with run_log(con, "scrape-cristin") as log:
         persons = list(paged(f, f"{API}/persons?institution={INST}&parent_unit_id={FACULTY}", "persons_lui"))
@@ -166,6 +189,9 @@ def run(refresh=False, max_age=30, limit=None) -> None:
             if i % 10 == 0:
                 print(f"  persons {i}/{len(persons)}  results so far {len(seen_results)}  ({f.stats()})", flush=True)
         con.commit()
+        if since:
+            n_res, n_proj = update_modified(con, f, since, {p["cristin_person_id"] for p in persons})
+            print(f"modified since {since}: {n_res} results, {n_proj} LUI projects", flush=True)
 
         # projects: all OsloMet projects, keep those with a LUI participant or coordinator
         projects = list(paged(f, f"{API}/projects?institution={INST}", "projects_oslomet", per_page=500))

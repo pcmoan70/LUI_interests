@@ -49,6 +49,19 @@ def upsert(con: sqlite3.Connection, table: str, row: dict, keys: list[str] | Non
     con.execute(sql, [row[c] for c in cols])
 
 
+def since_date(con: sqlite3.Connection, stage: str, since: str | None, fallback_days: int = 8) -> str | None:
+    """Resolve a --since value: None → None, 'auto' → the day before the last run of `stage`
+    (or `fallback_days` ago when the stage never ran), otherwise the given YYYY-MM-DD."""
+    from datetime import date, timedelta
+    if not since:
+        return None
+    if since != "auto":
+        return since
+    row = con.execute("SELECT MAX(started_at) FROM run_log WHERE stage=?", (stage,)).fetchone()
+    last = date.fromisoformat(row[0][:10]) if row and row[0] else date.today() - timedelta(days=fallback_days - 1)
+    return (last - timedelta(days=1)).isoformat()
+
+
 @contextmanager
 def run_log(con: sqlite3.Connection, stage: str):
     started = datetime.now(timezone.utc).isoformat()

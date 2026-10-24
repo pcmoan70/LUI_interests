@@ -42,16 +42,19 @@ def classify(w: dict, ours: dict[str, str]) -> tuple[str, list, list, str | None
     return scope, sorted(set(countries)), sorted(set(n for n in names if n))[:8], ours.get(wid)
 
 
-def run(refresh=False, max_age=30, limit=None) -> None:
+def run(refresh=False, max_age=30, limit=None, fresh=()) -> None:
     init_db()
     con = connect()
     ensure_table(con)
-    f = Fetcher("openalex", max_age_days=max_age, refresh=refresh, budget=900, keep_remaining=20)   # well inside the 1 000/day free quota
+    con.execute("CREATE TABLE IF NOT EXISTS cite_refresh_queue (work_id TEXT PRIMARY KEY, queued_at TEXT)")
+    queue = {r[0] for r in con.execute("SELECT work_id FROM cite_refresh_queue")}   # citation count changed: refetch
+    f = Fetcher("openalex", max_age_days=None, refresh=refresh, budget=900, keep_remaining=20, fresh=fresh)   # well inside the 1 000/day free quota
     ours = dict(con.execute("SELECT openalex_work_id, pub_id FROM publication WHERE openalex_work_id IS NOT NULL"))
     todo = [(w, p) for w, p in con.execute("SELECT openalex_work_id, pub_id FROM publication WHERE openalex_work_id IS NOT NULL AND COALESCE(cited_by_count,0) > 0")]
+    todo.sort(key=lambda t: t[0] not in queue)   # queued (changed) works first, so a quota stop never starves them
     if limit:
         todo = todo[:limit]
-    print(f"citing works for {len(todo)} cited publications", flush=True)
+    print(f"citing works for {len(todo)} cited publications ({len(queue)} queued for refresh)", flush=True)
     n_rows = 0
     stopped = None
     with run_log(con, "scrape-openalex-cites") as log:
@@ -60,9 +63,11 @@ def run(refresh=False, max_age=30, limit=None) -> None:
             cursor = "*"; page = 0
             while cursor:
                 url = f"{API}/works?filter=cites:{wid}&select=id,publication_year,authorships&per-page=200&cursor={cursor}&mailto={MAILTO}"
-                d = f.get_json(url, key=f"cites_{wid}_{page}")
+                d = f.get_json(url, key=f"cites_{wid}_{page}", force=wid in queue)
                 if not d:
                     break
+                if page == 0 and wid in queue:
+                    con.execute("DELETE FROM citing_work WHERE cited_pub_id=?", (pub_id,))
                 for w in d.get("results", []):
                     scope, countries, names, our_pid = classify(w, ours)
                     con.execute("INSERT OR REPLACE INTO citing_work VALUES (?,?,?,?,?,?,?)",
@@ -70,6 +75,7 @@ def run(refresh=False, max_age=30, limit=None) -> None:
                     n_rows += 1
                 cursor = (d.get("meta") or {}).get("next_cursor") if len(d.get("results", [])) == 200 else None
                 page += 1
+            con.execute("DELETE FROM cite_refresh_queue WHERE work_id=?", (wid,))
             con.commit()
             if i % 200 == 0:
                 print(f"  {i}/{len(todo)} cited works, {n_rows} citations ({f.stats()})", flush=True)

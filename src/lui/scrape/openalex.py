@@ -70,10 +70,14 @@ def store_work(con, w: dict, pub_id: str, name_to_person: dict[str, list[str]]) 
                                 (au["orcid"].rsplit("/", 1)[-1], person_id))
 
 
-def run(refresh=False, max_age=30, limit=None) -> None:
+def run(refresh=False, max_age=30, limit=None, fresh=()) -> None:
     init_db()
     con = connect()
-    f = Fetcher("openalex", max_age_days=max_age, refresh=refresh)
+    f = Fetcher("openalex", max_age_days=max_age, refresh=refresh, fresh=fresh)
+    # OpenAlex offers "updated since" only on paid plans, so our diff is the citation count: works whose
+    # cited_by_count changed since the last run are queued for a fresh download of their citing works.
+    con.execute("CREATE TABLE IF NOT EXISTS cite_refresh_queue (work_id TEXT PRIMARY KEY, queued_at TEXT)")
+    old_counts = dict(con.execute("SELECT openalex_work_id, COALESCE(cited_by_count,0) FROM publication WHERE openalex_work_id IS NOT NULL"))
     rows = con.execute("SELECT pub_id, doi FROM publication WHERE doi IS NOT NULL AND doi NOT LIKE '%,%' AND doi NOT LIKE '%|%'").fetchall()
     if limit:
         rows = rows[:limit]
@@ -109,6 +113,11 @@ def run(refresh=False, max_age=30, limit=None) -> None:
                        JOIN publication b ON b.openalex_work_id=r.ref_work_id""")
         con.commit()
         n_cit = con.execute("SELECT COUNT(*) FROM citation").fetchone()[0]
+        changed = [(w,) for w, n in con.execute("SELECT openalex_work_id, COALESCE(cited_by_count,0) FROM publication WHERE openalex_work_id IS NOT NULL")
+                   if n > 0 and n != old_counts.get(w, 0)]
+        from datetime import date
+        con.executemany("INSERT OR IGNORE INTO cite_refresh_queue VALUES (?, ?)", [(w, date.today().isoformat()) for (w,) in changed])
+        con.commit()
         log["rows"] = found
-        log["notes"] = f"{found}/{len(dois)} DOIs found in OpenAlex; {n_cit} internal citations; {f.stats()}"
+        log["notes"] = f"{found}/{len(dois)} DOIs found in OpenAlex; {n_cit} internal citations; {len(changed)} works with changed citation count queued; {f.stats()}"
     print("done:", log["notes"])

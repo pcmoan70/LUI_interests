@@ -94,6 +94,18 @@ Plan: see ../PLAN.md. Tick items as they are completed; add a Review section per
 - [ ] Playwright batch PDF export
 - [ ] nb/en toggle, accessibility pass
 
+## Phase 8b — Weekly incremental update (user request 2026-10-24: "schedule updates every week (Sunday), get only what's new")
+Findings on change feeds: Cristin `/results?unit=215.4.0.0&modified_since=YYYY-MM-DD` and `/projects?institution=215&modified_since=`
+work (117 LUI results changed since 2026-10-01); NVA `search/resources?...&modifiedSince=YYYY-MM-DD` works (same 117);
+OpenAlex `from_updated_date`/`from_created_date` are paid-plan only, `from_publication_date` is free; oslomet.no has no feed.
+- [x] `Fetcher(fresh=prefixes)` always refetches listing keys; `get(..., force=True)` per call
+- [x] `--since auto|YYYY-MM-DD` for scrape-cristin (modified results: contributors replaced; modified projects) and scrape-nva (modifiedSince hits + details)
+- [x] `--fresh` for scrape stages; scrape-openalex re-reads all DOI batches and queues works whose cited_by_count changed (`cite_refresh_queue`)
+- [x] scrape-openalex-cites: queued works first and refetched (citing_work rows replaced), the rest from cache (no expiry); queue survives quota stops
+- [x] `scripts/update_weekly.cmd`: incremental scrapes → identity, embed (incremental), tag, externals, edges, matrices, collab, export, verify → commit + push
+- [x] Live test 2026-10-24: NVA 36 modified hits, Cristin 36 modified results (875 requests), OpenAlex 151 works queued, 80 refetched before quota stop (71 carry over); daily task replaced by weekly task "LUI forskningskart - ukentlig oppdatering" (Sun 07:15, plain local StartBoundary because of DST)
+- [x] README: change-feed findings and weekly schedule
+
 ## Phase 9 — Pilot
 - [ ] Data statement + opt-out contact on site
 - [ ] Pilot with 5–10 colleagues; log feedback

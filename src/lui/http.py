@@ -46,7 +46,9 @@ def safe_key(s: str, maxlen: int = 150) -> str:
 
 
 class Fetcher:
-    def __init__(self, source: str, max_age_days: float | None = 30, refresh: bool = False, budget: int | None = None, keep_remaining: int = 10):
+    def __init__(self, source: str, max_age_days: float | None = 30, refresh: bool = False, budget: int | None = None, keep_remaining: int = 10,
+                 fresh: tuple[str, ...] = ()):
+        self.fresh = tuple(fresh)             # cache keys starting with one of these prefixes are always refetched (listings)
         self.source = source
         self.budget = budget                  # max network requests this run (None = unlimited)
         self.keep_remaining = keep_remaining  # stop when the API reports fewer remaining daily credits than this
@@ -65,11 +67,11 @@ class Fetcher:
         return base.with_suffix(f".{ext}"), base.with_suffix(".meta.json")
 
     def get(self, url: str, key: str | None = None, ext: str = "json",
-            headers: dict | None = None, ok_statuses=(200,)) -> bytes | None:
-        """Return body bytes (from cache if fresh). None if the server answered 404."""
+            headers: dict | None = None, ok_statuses=(200,), force: bool = False) -> bytes | None:
+        """Return body bytes (from cache if fresh). None if the server answered 404. force=True bypasses the cache."""
         key = key or url
         body_p, meta_p = self._paths(key, ext)
-        if not self.refresh and meta_p.exists():
+        if not self.refresh and not force and not key.startswith(self.fresh) and meta_p.exists():
             meta = json.loads(meta_p.read_text(encoding="utf-8"))
             age = time.time() - meta["fetched_ts"]
             if self.max_age is None or age < self.max_age:
@@ -124,8 +126,8 @@ class Fetcher:
         meta_p.write_text(json.dumps(meta), encoding="utf-8")
         return r.content
 
-    def get_json(self, url: str, key: str | None = None, headers: dict | None = None):
-        b = self.get(url, key, "json", headers={"Accept": "application/json", **(headers or {})})
+    def get_json(self, url: str, key: str | None = None, headers: dict | None = None, force: bool = False):
+        b = self.get(url, key, "json", headers={"Accept": "application/json", **(headers or {})}, force=force)
         return None if b is None else json.loads(b.decode("utf-8"))
 
     def get_text(self, url: str, key: str | None = None, ext: str = "html", headers=None) -> str | None:

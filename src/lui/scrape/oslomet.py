@@ -218,10 +218,10 @@ def parse_project(html: str, slug: str) -> dict:
 
 
 # ----------------------------------------------------------------------------- run
-def run(refresh=False, max_age=30, limit=None) -> None:
+def run(refresh=False, max_age=30, limit=None, fresh=()) -> None:
     init_db()
     con = connect()
-    f = Fetcher("oslomet", max_age_days=max_age, refresh=refresh)
+    f = Fetcher("oslomet", max_age_days=max_age, refresh=refresh, fresh=fresh)
 
     with run_log(con, "scrape-oslomet") as log:
         persons = scrape_listing(f)

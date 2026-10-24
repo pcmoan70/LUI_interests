@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import json
 
-from ..db import connect, init_db, run_log, upsert
+from ..db import connect, init_db, run_log, since_date, upsert
 from ..http import Fetcher
 from .cristin import CORE_GROUPS, WEIGHTS, norm_lang, norm_year
 
@@ -48,11 +48,13 @@ def ids_of(h: dict) -> tuple[str | None, str | None]:
     return cristin, handle
 
 
-def search_all(f: Fetcher, limit: int | None):
-    url = f"{API}/search/resources?unit={FACULTY}&size=200&aggregation=none&sort=identifier"
+def search_all(f: Fetcher, limit: int | None, since: str | None = None):
+    """All LUI resources, or (since=YYYY-MM-DD) only those modified since that date – NVA's own 'what's new' filter."""
+    url = f"{API}/search/resources?unit={FACULTY}&size=200&aggregation=none&sort=identifier" + (f"&modifiedSince={since}" if since else "")
+    prefix = f"search_mod_{since}" if since else "search_lui"
     page = 0
     while url:
-        d = f.get_json(url, key=f"search_lui_{page:04d}", headers=JSON)
+        d = f.get_json(url, key=f"{prefix}_{page:04d}", headers=JSON, force=bool(since))
         if not d or not d.get("hits"):
             break
         yield from d["hits"]
@@ -146,18 +148,21 @@ def store_detail(con, pub_id: str, d: dict) -> None:
                                     "url": f"https://app.cristin.no/projects/show.jsf?id={cid}"}, keys=["project_id"])
 
 
-def run(refresh=False, max_age=30, limit=None) -> None:
+def run(refresh=False, max_age=30, limit=None, fresh=(), since=None) -> None:
     init_db()
     con = connect()
-    f = Fetcher("nva", max_age_days=max_age, refresh=refresh)
+    f = Fetcher("nva", max_age_days=max_age, refresh=refresh, fresh=fresh)
+    since = since_date(con, "scrape-nva", since)
+    if since:
+        print(f"nva: resources modified since {since}", flush=True)
     with run_log(con, "scrape-nva") as log:
         n_hits = n_detail = 0
-        for h in search_all(f, limit):
+        for h in search_all(f, limit, since):
             grp = TYPE_GROUP.get(hit_type(h) or "", "other")
             has_files = bool(h.get("associatedArtifacts")) or (h.get("filesStatus") not in (None, "noFiles"))
             d = None
             if grp in CORE_GROUPS or grp == "lecture" or has_files:
-                d = f.get_json(f"{API}/publication/{h['identifier']}", key=f"pub_{h['identifier']}", headers=JSON)
+                d = f.get_json(f"{API}/publication/{h['identifier']}", key=f"pub_{h['identifier']}", headers=JSON, force=bool(since))
             pub_id = store_hit(con, h)
             n_hits += 1
             if d:
@@ -182,5 +187,5 @@ def run(refresh=False, max_age=30, limit=None) -> None:
             n_pers += 1
         con.commit()
         log["rows"] = n_hits
-        log["notes"] = f"{n_hits} hits, {n_detail} details, {n_pers} persons; {f.stats()}"
+        log["notes"] = f"{n_hits} hits, {n_detail} details, {n_pers} persons; {f.stats()}" + (f"; modified since {since}" if since else "")
     print("done:", log["notes"])

@@ -17,3 +17,10 @@
   and run them with python -I instead of inline heredocs when regexes are involved.
 - 2026-10-21 Attribution: embedding similarity alone missed explicitly stated interests (bio said 'kritisk tenkning', talks were title-only). Always keep a lexical channel (keywords in titles/bios) next to embeddings, include talk titles, and audit stated-vs-profiled interests.
 - 2026-10-22 OpenAlex now enforces a daily free credit limit (x-ratelimit-limit: 1000 requests/day, 429 with retry-after ~15 h when exhausted). Large citation crawls must be spread over days or use a paid API key; the fetcher honours Retry-After.
+- 2026-10-24 Patch scripts that insert a new function "before def X" must check for decorators: inserting between
+  `@contextmanager` and `def run_log` silently re-targeted the decorator and broke every stage. Anchor on the
+  decorator line (or insert after the function) and run one stage before trusting a compile-only check.
+- 2026-10-24 Change feeds: Cristin (`modified_since`) and NVA (`modifiedSince`) support incremental fetches;
+  OpenAlex `from_updated_date` is paid-only, so diff on `cited_by_count` instead. Windows Task Scheduler: a trigger
+  created with `-At` right before a DST switch got an offset-bearing StartBoundary and shifted by an hour; set a
+  plain local StartBoundary (`YYYY-MM-DDTHH:MM:SS`).
